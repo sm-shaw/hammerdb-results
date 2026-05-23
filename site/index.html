@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HammerDB Result Artifacts Prototype</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; line-height: 1.35; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td { border: 1px solid #ccc; padding: 0.35rem; text-align: left; vertical-align: top; }
+    th { background: #f3f3f3; position: sticky; top: 0; }
+    .messages p { margin: 0.2rem 0; font-weight: bold; }
+    .note { background: #fff4cc; border: 1px solid #e5c76b; padding: 0.75rem; margin: 1rem 0; }
+    .cta { background: #eef5ff; border: 1px solid #b9d2ff; padding: 0.75rem; margin: 1rem 0; }
+    .scroll { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>HammerDB Result Artifacts Prototype</h1>
+  <div class="note">
+    <strong>Prototype only.</strong> Intended live publication path: TPC-Council/hammerdb-results, linked from the TPC HammerDB Artifact Results page.
+  </div>
+  <div class="cta">
+    <h2>Submit a HammerDB result artifact</h2>
+    <p>First, star the HammerDB project on GitHub: <a href="https://github.com/TPC-Council/HammerDB">https://github.com/TPC-Council/HammerDB</a></p>
+  </div>
+  <div class="messages">
+    <p>Community-submitted HammerDB results</p>
+    <p>Unaudited</p>
+    <p>Not official TPC benchmark results</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>rank</th><th>jobid</th><th>benchmark</th><th>database</th><th>database_display</th><th>release</th><th>timestamp</th><th>hdb_version</th><th>nopm</th><th>tpm</th><th>warehouses</th><th>virtual_users</th><th>rampup_minutes</th><th>duration_minutes</th><th>cpu_model</th><th>cpu_count</th><th>memory</th><th>system_type</th><th>os_name</th><th>storage</th><th>source_path</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>6A0D4536FD5E03E223237363</td><td>TPROC-C</td><td>MariaDB</td><td>MariaDB</td><td>13.0.1</td><td>2026-05-20 07:23:02</td><td>v5.0</td><td>586379</td><td>1362335</td><td>240</td><td>56</td><td>2</td><td>5</td><td>Intel(R) Xeon(R) Gold 5412U</td><td>48</td><td>125.5 GB</td><td>SPC741D8UD-2T/X550/H</td><td>Ubuntu 24.04.1 LTS</td><td>INTEL SSDPF2KX038T1 (3577 GB); INTEL SSDPF2KX038T1 (3577 GB)</td><td>results/tproc-c/mariadb/2026/05/6A0D4536FD5E03E223237363.json</td></tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>
