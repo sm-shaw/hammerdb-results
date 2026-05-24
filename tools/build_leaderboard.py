@@ -12,6 +12,17 @@ SITE_ROOT = REPO_ROOT / "site"
 LEADERBOARD_JSON = SITE_ROOT / "leaderboard.json"
 INDEX_HTML = SITE_ROOT / "index.html"
 
+
+def _fmt_num(v: object) -> str:
+    if v is None:
+        return "—"
+    if isinstance(v, (int, float)):
+        if isinstance(v, float) and not v.is_integer():
+            return f"{v:,.2f}"
+        return f"{int(v):,}"
+    return str(v)
+
+
 def _load_rows() -> list[dict]:
     rows = []
     for fp in sorted(RESULTS_ROOT.rglob("*.json")):
@@ -32,15 +43,12 @@ def _load_rows() -> list[dict]:
         r["rank"] = i
     return rows
 
+
 def _write_json(rows: list[dict]) -> None:
     payload = {
         "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
         "title": "HammerDB Result Artifacts Prototype Data",
         "disclaimer": [
-            "Prototype data output for HammerDB result artifacts.",
-            "Intended live publication repository: https://github.com/TPC-Council/hammerdb-results",
-            "Intended live GitHub Pages site: https://tpc-council.github.io/hammerdb-results/",
-            "Official public entry point: https://www.tpc.org/opensource/opensource5.asp",
             "Community-submitted HammerDB results",
             "Unaudited",
             "Not official TPC benchmark results",
@@ -49,52 +57,89 @@ def _write_json(rows: list[dict]) -> None:
     }
     LEADERBOARD_JSON.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
-def _card(row: dict) -> str:
-    report = f"report.html?artifact={quote(row.get('source_path',''), safe='')}"
-    if row.get("benchmark") == "TPROC-C":
-        main_a, main_b = f"NOPM {row.get('nopm','—')}", f"TPM {row.get('tpm','—')}"
+
+def _row_html(row: dict) -> str:
+    encoded = quote(row.get("source_path", ""), safe="")
+    report = f"report.html?artifact={encoded}"
+    db = row.get("database_display") or row.get("database") or "Unknown"
+    release = row.get("release") or "—"
+    benchmark = row.get("benchmark") or "—"
+    if benchmark == "TPROC-C":
+        main = f"<div class='main-metric'>{escape(_fmt_num(row.get('nopm')))} <span>NOPM</span></div><div class='sub-metric'>TPM {_fmt_num(row.get('tpm'))}</div>"
     else:
-        main_a, main_b = f"Geomean {row.get('geomean_seconds','—')}s", f"Total Query {row.get('total_query_time_seconds','—')}s"
+        main = f"<div class='main-metric'>{escape(_fmt_num(row.get('geomean_seconds')))} <span>Geomean</span></div><div class='sub-metric'>Total Query Time {_fmt_num(row.get('total_query_time_seconds'))}</div>"
     chips = [
-        ("warehouses", row.get("warehouses")), ("virtual_users", row.get("virtual_users")),
-        ("rampup_minutes", row.get("rampup_minutes")), ("duration_minutes", row.get("duration_minutes"))]
-    chip_html = "".join(f"<span class='chip'>{escape(k)}: {escape(str(v))}</span>" for k,v in chips if v is not None)
-    sys = " · ".join([x for x in [row.get("cpu_model"), row.get("cpu_count") and f"CPU {row.get('cpu_count')}", row.get("memory"), row.get("os_name")] if x])
-    return f"""<article class='result'>
-<div class='top'><span class='rank'>#{escape(str(row.get('rank','')))}</span><h3>{escape(str(row.get('database_display','')))}</h3><span class='badge'>{escape(str(row.get('benchmark','')))}</span></div>
-<p class='meta'>Release {escape(str(row.get('release','')))} · HammerDB {escape(str(row.get('hdb_version','')))} · {escape(str(row.get('timestamp','')))}</p>
-<div class='metrics'><div><label>Main</label><strong>{escape(main_a)}</strong></div><div><label>Secondary</label><strong>{escape(main_b)}</strong></div></div>
-<div class='chips'>{chip_html}</div>
-<p class='meta'>{escape(sys or 'System summary unavailable')}</p>
-<a class='btn' href='{escape(report)}'>View report</a>
+        ("Warehouses", row.get("warehouses")),
+        ("VUs", row.get("virtual_users")),
+        ("Rampup", row.get("rampup_minutes")),
+        ("Duration", row.get("duration_minutes")),
+    ]
+    cfg = "".join(f"<span class='chip'>{k}: {escape(_fmt_num(v))}</span>" for k, v in chips if v is not None)
+    sys_bits = [x for x in [row.get("cpu_model"), row.get("cpu_count") and f"CPU x{row.get('cpu_count')}", row.get("memory"), row.get("os_name")] if x]
+    sys_txt = " · ".join(escape(str(x)) for x in sys_bits) if sys_bits else "System details unavailable"
+    date = row.get("timestamp") or "—"
+    return f"""<article class='lb-row'>
+<div class='cell rank'>{escape(str(row.get('rank','—')))}</div>
+<div class='cell database'><strong>{escape(str(db))}</strong><span class='muted'>Release {escape(str(release))}</span></div>
+<div class='cell benchmark'><span class='pill'>{escape(str(benchmark))}</span></div>
+<div class='cell result'>{main}</div>
+<div class='cell config'>{cfg or '<span class="muted">No configuration data</span>'}</div>
+<div class='cell system'>{sys_txt}</div>
+<div class='cell date'>{escape(str(date))}</div>
+<div class='cell action'><a class='btn' href='{escape(report)}'>View report</a></div>
 </article>"""
 
-def _write_html(rows:list[dict])->None:
-    html=f"""<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>HammerDB Result Artifacts</title><style>
-body{{margin:0;background:#f6f8fc;color:#111827;font-family:Inter,Arial,sans-serif}}.wrap{{max-width:1100px;margin:0 auto;padding:24px}}
-.hero,.panel,.result{{background:#fff;border:1px solid #e1e7f5;border-radius:16px;box-shadow:0 4px 16px rgba(17,24,39,.05)}}
-.hero{{padding:20px}}.badgeP{{display:inline-block;background:#eef2ff;color:#3742a6;padding:4px 10px;border-radius:999px;font-size:.8rem;font-weight:700}}
-.subtitle{{color:#4b5563}}.warn{{margin-top:10px;background:#fff7e6;border-left:4px solid #f59e0b;padding:10px;border-radius:8px}}
-.grid{{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}}@media(max-width:760px){{.grid{{grid-template-columns:1fr}}}}
-.panel{{padding:14px}}.btn{{display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:9px 12px;border-radius:10px;font-weight:600}}
-.list{{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}}.result{{padding:14px}}
-.top{{display:flex;align-items:center;gap:10px}}.rank{{background:#e0e7ff;color:#1e3a8a;padding:4px 10px;border-radius:999px;font-weight:700}}
-.badge{{background:#f1f5f9;padding:4px 8px;border-radius:8px;font-size:.82rem}}.meta{{color:#6b7280;font-size:.92rem}}
-.metrics{{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}}.metrics div{{background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:8px}}
-.metrics label{{display:block;color:#6b7280;font-size:.8rem}}.chips{{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}}.chip{{background:#eef2f7;border:1px solid #dde3ed;border-radius:999px;padding:4px 8px;font-size:.8rem}}
-</style></head><body><main class='wrap'>
-<section class='hero'><span class='badgeP'>Prototype</span><h1>HammerDB Result Artifacts</h1>
-<p class='subtitle'>Community-submitted HammerDB benchmark result artifacts, reviewed through GitHub.</p>
-<div class='warn'>These are community-submitted HammerDB results. They are not official TPC benchmark results.</div></section>
-<div class='grid'><section class='panel'><h2>Support HammerDB</h2><p>Star the HammerDB project before submitting a result artifact.</p><a class='btn' href='https://github.com/TPC-Council/HammerDB'>Star HammerDB on GitHub</a></section>
-<section class='panel'><h2>Submission guidance</h2><p>To submit a result, open the benchmark report in HammerDB and use Share with TPC-OSS.</p></section></div>
-<section class='list'>{''.join(_card(r) for r in rows)}</section></main></body></html>"""
-    INDEX_HTML.write_text(html, encoding='utf-8')
 
-def main()->int:
+def _write_html(rows: list[dict]) -> None:
+    db_count = len({(r.get("database_display") or r.get("database") or "Unknown") for r in rows})
+    top_nopm = max((r.get("nopm") for r in rows if isinstance(r.get("nopm"), (int, float))), default=None)
+    html = f"""<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>HammerDB Result Artifacts</title>
+<style>
+:root{{--bg:#f4f7ff;--navy:#0b1535;--card:#ffffff;--text:#0f172a;--muted:#64748b;--line:#dbe4f0;--blue:#2563eb}}
+*{{box-sizing:border-box}}body{{margin:0;background:var(--bg);font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--text)}}
+.wrap{{max-width:1220px;margin:0 auto;padding:0 20px 28px}}.hero{{background:linear-gradient(135deg,#08112f,#12275f);color:#fff;padding:48px 0 40px;margin-bottom:22px}}
+.hero h1{{margin:10px 0 12px;font-size:2.2rem}}.hero p{{max-width:780px;color:#d8e2ff}}
+.badges{{display:flex;gap:8px;flex-wrap:wrap}}.badge{{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.26);font-weight:600;font-size:.84rem}}
+.warn{{margin-top:16px;padding:12px 14px;border-radius:12px;background:rgba(245,158,11,.16);border:1px solid rgba(245,158,11,.35);color:#ffe7bd;font-weight:500}}
+.top-grid{{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-top:-10px}}@media(max-width:980px){{.top-grid{{grid-template-columns:1fr}}}}
+.card{{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:0 8px 24px rgba(15,23,42,.05)}}
+.cta h2{{margin:0 0 8px}}.cta .btn{{margin-top:10px}}.btn{{display:inline-block;background:#111827;color:#fff;text-decoration:none;padding:10px 14px;border-radius:10px;font-weight:700}}
+.stats{{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0 20px}}@media(max-width:760px){{.stats{{grid-template-columns:1fr}}}}
+.stat{{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}}.stat .k{{color:var(--muted);font-size:.84rem}}.stat .v{{margin-top:6px;font-size:1.55rem;font-weight:800}}
+.header-row,.lb-row{{display:grid;grid-template-columns:58px 190px 120px 170px 250px 1fr 165px 120px;gap:10px;align-items:center}}
+.header-row{{color:var(--muted);font-size:.82rem;font-weight:700;padding:0 10px 8px}}.lb{{display:flex;flex-direction:column;gap:10px}}
+.lb-row{{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 10px;box-shadow:0 4px 14px rgba(15,23,42,.04)}}
+.cell{{min-width:0}}.rank{{font-weight:800;color:#1d4ed8}}.database strong{{display:block;font-size:1.03rem}}.muted{{display:block;color:var(--muted);font-size:.82rem;margin-top:2px}}
+.pill{{display:inline-block;padding:5px 10px;border-radius:999px;background:#e6efff;color:#1d4ed8;font-weight:700;font-size:.82rem}}
+.main-metric{{font-size:1.1rem;font-weight:800}}.main-metric span{{font-size:.74rem;color:var(--muted);font-weight:700;margin-left:4px;text-transform:uppercase}}
+.sub-metric{{color:var(--muted);font-size:.86rem;margin-top:3px}}.config{{display:flex;flex-wrap:wrap;gap:6px}}
+.chip{{background:#eef4ff;border:1px solid #d5e3ff;color:#25407a;border-radius:999px;padding:3px 8px;font-size:.78rem;font-weight:600}}
+.system,.date{{color:#334155;font-size:.86rem;line-height:1.35}}.action .btn{{background:var(--blue);padding:8px 11px;font-size:.84rem}}
+@media(max-width:1160px){{.header-row{{display:none}}.lb-row{{grid-template-columns:1fr;gap:8px}}.cell::before{{content:attr(data-label);display:block;color:var(--muted);font-size:.75rem;font-weight:700;margin-bottom:2px;text-transform:uppercase;letter-spacing:.02em}}.rank::before{{content:'Rank'}}.database::before{{content:'Database'}}.benchmark::before{{content:'Benchmark'}}.result::before{{content:'Result'}}.config::before{{content:'Configuration'}}.system::before{{content:'System'}}.date::before{{content:'Date'}}.action::before{{content:'Action'}}}}
+</style></head><body>
+<header class='hero'><div class='wrap'><div class='badges'><span class='badge'>Prototype</span><span class='badge'>Community Submitted</span><span class='badge'>Unofficial</span></div>
+<h1>HammerDB Result Artifacts</h1>
+<p>Community-submitted HammerDB benchmark result artifacts, reviewed through GitHub.</p>
+<div class='warn'>These are community-submitted HammerDB results. They are not official TPC benchmark results.</div></div></header>
+<main class='wrap'>
+<section class='top-grid'><article class='card cta'><h2>Star HammerDB on GitHub</h2><p>Join the project community and help others discover HammerDB.</p><a class='btn' href='https://github.com/TPC-Council/HammerDB'>★ Star HammerDB</a></article>
+<article class='card'><h3 style='margin:0 0 8px'>Submission guidance</h3><p style='margin:0;color:var(--muted)'>To submit a result, open the benchmark report in HammerDB and use Share with TPC-OSS.</p></article></section>
+<section class='stats'><article class='stat'><div class='k'>Published results</div><div class='v'>{len(rows)}</div></article><article class='stat'><div class='k'>Databases</div><div class='v'>{db_count}</div></article><article class='stat'><div class='k'>Top NOPM</div><div class='v'>{escape(_fmt_num(top_nopm))}</div></article></section>
+<section><div class='header-row'><div>Rank</div><div>Database</div><div>Benchmark</div><div>Result</div><div>Configuration</div><div>System</div><div>Date</div><div>Action</div></div>
+<div class='lb'>{''.join(_row_html(r) for r in rows)}</div></section>
+</main></body></html>"""
+    INDEX_HTML.write_text(html, encoding="utf-8")
+
+
+def main() -> int:
     SITE_ROOT.mkdir(parents=True, exist_ok=True)
-    rows=_load_rows(); _write_json(rows); _write_html(rows)
+    rows = _load_rows()
+    _write_json(rows)
+    _write_html(rows)
     print(f"Generated {LEADERBOARD_JSON.relative_to(REPO_ROOT)} and {INDEX_HTML.relative_to(REPO_ROOT)} with {len(rows)} row(s).")
     return 0
-if __name__=='__main__': raise SystemExit(main())
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
