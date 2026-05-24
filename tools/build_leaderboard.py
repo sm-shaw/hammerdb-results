@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""Build leaderboard JSON + static HTML from HammerDB result artifacts."""
-
 from __future__ import annotations
-
 import json
 from datetime import datetime, timezone
 from html import escape
@@ -15,49 +12,25 @@ SITE_ROOT = REPO_ROOT / "site"
 LEADERBOARD_JSON = SITE_ROOT / "leaderboard.json"
 INDEX_HTML = SITE_ROOT / "index.html"
 
-
 def _load_rows() -> list[dict]:
-    rows: list[dict] = []
-    for file_path in sorted(RESULTS_ROOT.rglob("*.json")):
-        rel_path = file_path.relative_to(REPO_ROOT).as_posix()
-        payload = json.loads(file_path.read_text(encoding="utf-8"))
-
-        job = payload.get("job", {})
-        cfg = payload.get("benchmark_config", {})
-        result = payload.get("result", {})
-        system = payload.get("system", {})
-
-        row = {
-            "jobid": job.get("jobid"),
-            "benchmark": job.get("benchmark"),
-            "database": job.get("database"),
-            "database_display": job.get("database_display"),
-            "release": job.get("release"),
-            "timestamp": job.get("timestamp"),
-            "hdb_version": job.get("hdb_version"),
-            "nopm": result.get("nopm"),
-            "tpm": result.get("tpm"),
-            "geomean_seconds": result.get("geomean_seconds"),
-            "total_query_time_seconds": result.get("total_query_time_seconds"),
-            "warehouses": cfg.get("warehouses"),
-            "virtual_users": cfg.get("virtual_users"),
-            "rampup_minutes": cfg.get("rampup_minutes"),
-            "duration_minutes": cfg.get("duration_minutes"),
-            "cpu_model": system.get("cpumodel"),
-            "cpu_count": system.get("cpucount"),
-            "memory": system.get("memory"),
-            "system_type": system.get("system_type"),
-            "os_name": system.get("os_name"),
-            "storage": system.get("storage"),
-            "source_path": rel_path,
-        }
-        rows.append(row)
-
+    rows = []
+    for fp in sorted(RESULTS_ROOT.rglob("*.json")):
+        rel = fp.relative_to(REPO_ROOT).as_posix()
+        p = json.loads(fp.read_text(encoding="utf-8"))
+        job, cfg, res, sys = p.get("job", {}), p.get("benchmark_config", {}), p.get("result", {}), p.get("system", {})
+        rows.append({
+            "jobid": job.get("jobid"), "benchmark": job.get("benchmark"), "database": job.get("database"),
+            "database_display": job.get("database_display"), "release": job.get("release"), "timestamp": job.get("timestamp"),
+            "hdb_version": job.get("hdb_version"), "nopm": res.get("nopm"), "tpm": res.get("tpm"),
+            "geomean_seconds": res.get("geomean_seconds"), "total_query_time_seconds": res.get("total_query_time_seconds"),
+            "warehouses": cfg.get("warehouses"), "virtual_users": cfg.get("virtual_users"), "rampup_minutes": cfg.get("rampup_minutes"),
+            "duration_minutes": cfg.get("duration_minutes"), "cpu_model": sys.get("cpumodel"), "cpu_count": sys.get("cpucount"),
+            "memory": sys.get("memory"), "os_name": sys.get("os_name"), "source_path": rel,
+        })
     rows.sort(key=lambda r: (r.get("nopm") is None, -(r.get("nopm") or 0), r.get("jobid") or ""))
-    for idx, row in enumerate(rows, start=1):
-        row["rank"] = idx
+    for i, r in enumerate(rows, 1):
+        r["rank"] = i
     return rows
-
 
 def _write_json(rows: list[dict]) -> None:
     payload = {
@@ -76,103 +49,52 @@ def _write_json(rows: list[dict]) -> None:
     }
     LEADERBOARD_JSON.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
-
-def _metric_summary(row: dict) -> str:
+def _card(row: dict) -> str:
+    report = f"report.html?artifact={quote(row.get('source_path',''), safe='')}"
     if row.get("benchmark") == "TPROC-C":
-        return f"NOPM {row.get('nopm', '—')} · TPM {row.get('tpm', '—')}"
-    return f"Geomean(s) {row.get('geomean_seconds', '—')} · Total Query(s) {row.get('total_query_time_seconds', '—')}"
+        main_a, main_b = f"NOPM {row.get('nopm','—')}", f"TPM {row.get('tpm','—')}"
+    else:
+        main_a, main_b = f"Geomean {row.get('geomean_seconds','—')}s", f"Total Query {row.get('total_query_time_seconds','—')}s"
+    chips = [
+        ("warehouses", row.get("warehouses")), ("virtual_users", row.get("virtual_users")),
+        ("rampup_minutes", row.get("rampup_minutes")), ("duration_minutes", row.get("duration_minutes"))]
+    chip_html = "".join(f"<span class='chip'>{escape(k)}: {escape(str(v))}</span>" for k,v in chips if v is not None)
+    sys = " · ".join([x for x in [row.get("cpu_model"), row.get("cpu_count") and f"CPU {row.get('cpu_count')}", row.get("memory"), row.get("os_name")] if x])
+    return f"""<article class='result'>
+<div class='top'><span class='rank'>#{escape(str(row.get('rank','')))}</span><h3>{escape(str(row.get('database_display','')))}</h3><span class='badge'>{escape(str(row.get('benchmark','')))}</span></div>
+<p class='meta'>Release {escape(str(row.get('release','')))} · HammerDB {escape(str(row.get('hdb_version','')))} · {escape(str(row.get('timestamp','')))}</p>
+<div class='metrics'><div><label>Main</label><strong>{escape(main_a)}</strong></div><div><label>Secondary</label><strong>{escape(main_b)}</strong></div></div>
+<div class='chips'>{chip_html}</div>
+<p class='meta'>{escape(sys or 'System summary unavailable')}</p>
+<a class='btn' href='{escape(report)}'>View report</a>
+</article>"""
 
+def _write_html(rows:list[dict])->None:
+    html=f"""<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>HammerDB Result Artifacts</title><style>
+body{{margin:0;background:#f6f8fc;color:#111827;font-family:Inter,Arial,sans-serif}}.wrap{{max-width:1100px;margin:0 auto;padding:24px}}
+.hero,.panel,.result{{background:#fff;border:1px solid #e1e7f5;border-radius:16px;box-shadow:0 4px 16px rgba(17,24,39,.05)}}
+.hero{{padding:20px}}.badgeP{{display:inline-block;background:#eef2ff;color:#3742a6;padding:4px 10px;border-radius:999px;font-size:.8rem;font-weight:700}}
+.subtitle{{color:#4b5563}}.warn{{margin-top:10px;background:#fff7e6;border-left:4px solid #f59e0b;padding:10px;border-radius:8px}}
+.grid{{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}}@media(max-width:760px){{.grid{{grid-template-columns:1fr}}}}
+.panel{{padding:14px}}.btn{{display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:9px 12px;border-radius:10px;font-weight:600}}
+.list{{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}}.result{{padding:14px}}
+.top{{display:flex;align-items:center;gap:10px}}.rank{{background:#e0e7ff;color:#1e3a8a;padding:4px 10px;border-radius:999px;font-weight:700}}
+.badge{{background:#f1f5f9;padding:4px 8px;border-radius:8px;font-size:.82rem}}.meta{{color:#6b7280;font-size:.92rem}}
+.metrics{{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}}.metrics div{{background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:8px}}
+.metrics label{{display:block;color:#6b7280;font-size:.8rem}}.chips{{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}}.chip{{background:#eef2f7;border:1px solid #dde3ed;border-radius:999px;padding:4px 8px;font-size:.8rem}}
+</style></head><body><main class='wrap'>
+<section class='hero'><span class='badgeP'>Prototype</span><h1>HammerDB Result Artifacts</h1>
+<p class='subtitle'>Community-submitted HammerDB benchmark result artifacts, reviewed through GitHub.</p>
+<div class='warn'>These are community-submitted HammerDB results. They are not official TPC benchmark results.</div></section>
+<div class='grid'><section class='panel'><h2>Support HammerDB</h2><p>Star the HammerDB project before submitting a result artifact.</p><a class='btn' href='https://github.com/TPC-Council/HammerDB'>Star HammerDB on GitHub</a></section>
+<section class='panel'><h2>Submission guidance</h2><p>To submit a result, open the benchmark report in HammerDB and use Share with TPC-OSS.</p></section></div>
+<section class='list'>{''.join(_card(r) for r in rows)}</section></main></body></html>"""
+    INDEX_HTML.write_text(html, encoding='utf-8')
 
-def _write_html(rows: list[dict]) -> None:
-    cards = []
-    for row in rows:
-        report_href = f"report.html?artifact={quote(row.get('source_path', ''), safe='')}"
-        config_bits = []
-        if row.get("warehouses") is not None:
-            config_bits.append(f"Warehouses: {row['warehouses']}")
-        if row.get("virtual_users") is not None:
-            config_bits.append(f"Virtual users: {row['virtual_users']}")
-        config_text = " · ".join(config_bits) if config_bits else "Benchmark configuration in report"
-        cards.append(
-            f"""
-      <article class="result-card">
-        <div class="row-top"><span class="rank">#{escape(str(row.get('rank', '')))}</span><span class="db">{escape(str(row.get('database_display', '')))}</span></div>
-        <div class="meta">{escape(str(row.get('release', '')))} · {escape(str(row.get('benchmark', '')))} · {escape(str(row.get('hdb_version', '')))}</div>
-        <div class="meta">{escape(str(row.get('timestamp', '')))}</div>
-        <div class="headline">{escape(_metric_summary(row))}</div>
-        <div class="meta">{escape(config_text)}</div>
-        <a class="btn" href="{escape(report_href)}">View report</a>
-      </article>
-            """.rstrip()
-        )
-
-    html = f"""<!doctype html>
-<html lang=\"en\">
-<head>
-  <meta charset=\"utf-8\">
-  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
-  <title>HammerDB Result Artifacts Prototype</title>
-  <style>
-    :root {{ --bg:#0b1020; --surface:#131a2e; --text:#e9eefb; --muted:#a9b5d6; --accent:#7aa2ff; --warn:#ffd98a; --ok:#9ce0aa; }}
-    body {{ margin:0; font-family:Inter,Arial,sans-serif; background:#f4f7ff; color:#10162a; }}
-    .wrap {{ max-width: 1024px; margin: 0 auto; padding: 24px; }}
-    .hero {{ background:linear-gradient(140deg,var(--bg),#1c2a52); color:var(--text); border-radius:16px; padding:24px; }}
-    .hero h1 {{ margin:0 0 10px; font-size:1.9rem; }}
-    .hero p {{ margin:6px 0; color:var(--muted); }}
-    .notice,.cta,.disclaimer {{ margin-top:16px; border-radius:12px; padding:14px 16px; background:#fff; border:1px solid #d8e0f4; }}
-    .notice {{ border-left:5px solid #f0b429; }}
-    .cta {{ border-left:5px solid #4a90e2; }}
-    .disclaimer {{ border-left:5px solid #8f9bb3; }}
-    .grid {{ margin-top:18px; display:grid; gap:14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }}
-    .result-card {{ background:#fff; border:1px solid #d8e0f4; border-radius:14px; padding:14px; box-shadow:0 2px 10px rgba(9,30,66,.06); }}
-    .row-top {{ display:flex; justify-content:space-between; align-items:center; }}
-    .rank {{ background:#eef3ff; color:#2b4ca7; font-weight:700; border-radius:999px; padding:4px 10px; }}
-    .db {{ font-weight:700; font-size:1.08rem; }}
-    .meta {{ color:#4a5678; margin-top:6px; font-size:.95rem; }}
-    .headline {{ margin-top:10px; font-weight:700; }}
-    .btn {{ display:inline-block; margin-top:12px; background:var(--accent); color:white; text-decoration:none; padding:8px 12px; border-radius:8px; }}
-  </style>
-</head>
-<body>
-  <main class=\"wrap\">
-    <section class=\"hero\">
-      <h1>HammerDB Result Artifacts Prototype</h1>
-      <p>Modern prototype leaderboard generated from GitHub-reviewed HammerDB summaryjson artifacts.</p>
-      <p>Intended live publication path: TPC-Council/hammerdb-results.</p>
-    </section>
-
-    <section class=\"notice\">
-      <strong>Prototype only.</strong> Intended live publication path: TPC-Council/hammerdb-results, linked from the TPC HammerDB Artifact Results page.
-    </section>
-
-    <section class=\"cta\">
-      <strong>First, star the HammerDB project on GitHub:</strong>
-      <a href=\"https://github.com/TPC-Council/HammerDB\">https://github.com/TPC-Council/HammerDB</a>
-      <p>To submit a result, open the benchmark report in HammerDB and use Share with TPC-OSS.</p>
-    </section>
-
-    <section class=\"disclaimer\">
-      <div>Community-submitted HammerDB results</div>
-      <div>Unaudited</div>
-      <div>Not official TPC benchmark results</div>
-    </section>
-
-    <section class=\"grid\">{''.join(cards)}</section>
-  </main>
-</body>
-</html>
-"""
-    INDEX_HTML.write_text(html, encoding="utf-8")
-
-
-def main() -> int:
+def main()->int:
     SITE_ROOT.mkdir(parents=True, exist_ok=True)
-    rows = _load_rows()
-    _write_json(rows)
-    _write_html(rows)
+    rows=_load_rows(); _write_json(rows); _write_html(rows)
     print(f"Generated {LEADERBOARD_JSON.relative_to(REPO_ROOT)} and {INDEX_HTML.relative_to(REPO_ROOT)} with {len(rows)} row(s).")
     return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
+if __name__=='__main__': raise SystemExit(main())
