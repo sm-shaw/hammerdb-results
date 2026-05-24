@@ -28,6 +28,9 @@ jobs:
       - name: Build leaderboard
         run: python tools/build_leaderboard.py
 
+      - name: Include result artifacts in Pages site
+        run: cp -R results site/results
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
