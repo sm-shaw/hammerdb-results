@@ -113,6 +113,7 @@ def _write_html(rows: list[dict]) -> None:
   <div class=\"cta\">
     <h2>Submit a HammerDB result artifact</h2>
     <p>First, star the HammerDB project on GitHub: <a href=\"https://github.com/TPC-Council/HammerDB\">https://github.com/TPC-Council/HammerDB</a></p>
+    <p><a href=\"submit.html\">Submit a HammerDB result artifact</a></p>
   </div>
   <div class=\"messages\">
     <p>Community-submitted HammerDB results</p>
