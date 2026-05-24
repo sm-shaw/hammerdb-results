@@ -31,6 +31,9 @@
       "cpu_count": "48",
       "memory": "125.5 GB",
       "os_name": "Ubuntu 24.04.1 LTS",
+      "system_type": "SPC741D8UD-2T/X550/H",
+      "os_name": "Ubuntu 24.04.1 LTS",
+      "storage": "INTEL SSDPF2KX038T1 (3577 GB); INTEL SSDPF2KX038T1 (3577 GB)",
       "source_path": "results/tproc-c/mariadb/2026/05/6A0D4536FD5E03E223237363.json",
       "rank": 1
     }
