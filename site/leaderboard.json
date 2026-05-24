@@ -1,0 +1,38 @@
+{
+  "generated_at_utc": "2026-05-24T10:37:07+00:00",
+  "title": "HammerDB Result Artifacts Prototype Data",
+  "disclaimer": [
+    "Prototype data output for HammerDB result artifacts.",
+    "Intended live publication repository: https://github.com/TPC-Council/hammerdb-results",
+    "Intended live GitHub Pages site: https://tpc-council.github.io/hammerdb-results/",
+    "Official public entry point: https://www.tpc.org/opensource/opensource5.asp",
+    "Community-submitted HammerDB results",
+    "Unaudited",
+    "Not official TPC benchmark results"
+  ],
+  "rows": [
+    {
+      "jobid": "6A0D4536FD5E03E223237363",
+      "benchmark": "TPROC-C",
+      "database": "MariaDB",
+      "database_display": "MariaDB",
+      "release": "13.0.1",
+      "timestamp": "2026-05-20 07:23:02",
+      "hdb_version": "v5.0",
+      "nopm": 586379,
+      "tpm": 1362335,
+      "geomean_seconds": null,
+      "total_query_time_seconds": null,
+      "warehouses": 240,
+      "virtual_users": 56,
+      "rampup_minutes": 2,
+      "duration_minutes": 5,
+      "cpu_model": "Intel(R) Xeon(R) Gold 5412U",
+      "cpu_count": "48",
+      "memory": "125.5 GB",
+      "os_name": "Ubuntu 24.04.1 LTS",
+      "source_path": "results/tproc-c/mariadb/2026/05/6A0D4536FD5E03E223237363.json",
+      "rank": 1
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>HammerDB Result Artifact Report</title>
+<style>
+:root{--line:#e2e8f0;--muted:#64748b;--surface:#fff;--bg:#f3f6fc;--primary:#2563eb}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Inter,Segoe UI,Arial,sans-serif;color:#0f172a}.top{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);z-index:10}
+.topin{max-width:1180px;margin:0 auto;padding:10px 18px;display:flex;gap:12px;align-items:center}.back{padding:7px 10px;border:1px solid var(--line);border-radius:9px;text-decoration:none;color:#0f172a;background:#f8fafc}
+.wrap{max-width:1180px;margin:0 auto;padding:18px}.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 4px 14px rgba(2,6,23,.05)}
+.hero{background:linear-gradient(135deg,#0f1d47,#1b3478);color:#e8eeff;border:none}.hero p{color:#c6d2fb}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.metric{background:#f8fbff;border:1px solid #dbe7ff;border-radius:10px;padding:10px}.metric .k{font-size:.78rem;color:#64748b}.metric .v{font-weight:800;font-size:1.15rem}
+.chips{display:flex;flex-wrap:wrap;gap:7px}.chip{background:#eef2ff;border:1px solid #dbe3ff;border-radius:999px;padding:4px 9px;font-size:.82rem}
+.kv{display:grid;grid-template-columns:220px 1fr;gap:6px}.kv .k{color:var(--muted)}table{width:100%;border-collapse:collapse}th,td{border:1px solid var(--line);padding:7px;text-align:left}th{background:#f8fafc}
+.chart{width:100%;height:260px;border:1px solid var(--line);border-radius:12px;background:#fff}.note{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px}
+.error{border-left:4px solid #e11d48;background:#fff1f2}details summary{cursor:pointer;font-weight:700}
+</style></head><body>
+<header class="top"><div class="topin"><a class="back" href="index.html">← Back to leaderboard</a><strong>HammerDB Result Artifact</strong></div></header>
+<main class="wrap"><div id="status" class="card">Loading report…</div><div id="content" style="display:none">
+<section class="card hero"><h1 id="title">Result report</h1><p id="subtitle"></p><div class="grid" id="headline"></div></section>
+<section class="card"><h2>Benchmark configuration</h2><div class="chips" id="cfg"></div></section>
+<section class="card"><h2>Response Times</h2><table><thead><tr><th>Name</th><th>p25</th><th>p50</th><th>p75</th><th>p95</th><th>p99</th></tr></thead><tbody id="rt"></tbody></table></section>
+<section class="card"><h2>System</h2><div class="kv" id="sys"></div></section>
+<section class="card"><h2>NOPM / TPM</h2><canvas id="bar" class="chart"></canvas></section>
+<section class="card"><h2>Response time percentile profile</h2><canvas id="box" class="chart"></canvas></section>
+<section class="card"><h2>Transaction count</h2><canvas id="tx" class="chart"></canvas></section>
+<section class="card"><h2>CPU</h2><canvas id="cpu" class="chart"></canvas></section>
+<section class="card"><h2>IOPS</h2><canvas id="iops" class="chart"></canvas></section>
+<section class="card"><h2>MB/s</h2><canvas id="mbps" class="chart"></canvas></section>
+<section class="card"><h2>Disclaimer</h2><div class="note">Community-submitted, unaudited, not official TPC benchmark results.</div></section>
+<section class="card"><details><summary>Show raw artifact JSON</summary><pre id="raw"></pre></details></section>
+</div></main>
+<script>
+(function(){
+const qs=new URLSearchParams(location.search); const artifactParam=qs.get('artifact'); const status=document.getElementById('status'); const content=document.getElementById('content');
+function setErr(msg,extra){status.className='card error';status.innerHTML=`<h3>${msg}</h3><pre>${extra||''}</pre>`;}
+if(!artifactParam){setErr('Missing artifact parameter',`artifact parameter: ${artifactParam}`);return;}
+const artifact=decodeURIComponent(artifactParam); const artifactUrl=new URL(artifact, window.location.href);
+fetch(artifactUrl).then(r=>{if(!r.ok){setErr('Unable to load artifact',`artifact parameter: ${artifactParam}\nresolved fetch URL: ${artifactUrl.href}\nHTTP status: ${r.status}`);throw new Error('stop');}return r.text();})
+.then(t=>{let a;try{a=JSON.parse(t);}catch(e){setErr('Invalid JSON artifact',`artifact parameter: ${artifactParam}\nresolved fetch URL: ${artifactUrl.href}`);throw new Error('stop');}
+document.getElementById('raw').textContent=JSON.stringify(a,null,2);
+const j=a.job||{},r=a.result||{},cfg=a.benchmark_config||{},sys=a.system||{}; if(!j.jobid){setErr('Missing required fields','job.jobid missing');throw new Error('stop');}
+status.style.display='none';content.style.display='block';
+document.getElementById('title').textContent=`${j.database_display||j.database||'Unknown'} ${j.benchmark||''}`;
+document.getElementById('subtitle').textContent=`Release ${j.release||'—'} · HammerDB ${j.hdb_version||'—'} · ${j.timestamp||'—'} · Job ${j.jobid}`;
+const primary=j.benchmark==='TPROC-C'?['NOPM',r.nopm]:['Geomean',r.geomean_seconds]; const secondary=j.benchmark==='TPROC-C'?['TPM',r.tpm]:['Total Query Time',r.total_query_time_seconds];
+[['Benchmark',j.benchmark],['Database',j.database_display||j.database],['Release',j.release],['HammerDB',j.hdb_version],['Timestamp',j.timestamp],['Job ID',j.jobid],[primary[0],primary[1]],[secondary[0],secondary[1]]].forEach(([k,v])=>{const d=document.createElement('div');d.className='metric';d.innerHTML=`<div class='k'>${k}</div><div class='v'>${v??'—'}</div>`;document.getElementById('headline').appendChild(d);});
+Object.entries(cfg).forEach(([k,v])=>{const map={warehouses:'Warehouses',virtual_users:'Virtual Users',rampup_minutes:'Rampup',duration_minutes:'Duration'};const s=document.createElement('span');s.className='chip';s.textContent=`${map[k]||k}: ${v}`;document.getElementById('cfg').appendChild(s);});
+const sysOrder=['hostname','cpumodel','cpucount','memory','system_vendor','system_type','os_name','nic','storage','cloud_instance'];
+sysOrder.forEach(k=>{if(sys[k]!==undefined){const key=document.createElement('div');key.className='k';key.textContent=k.replaceAll('_',' ');const val=document.createElement('div');val.textContent=sys[k];const wrap=document.getElementById('sys');wrap.appendChild(key);wrap.appendChild(val);}});
+(a.response_times?.rows||[]).forEach(x=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${x.name||''}</td><td>${x.p25_ms??''}</td><td>${x.p50_ms??''}</td><td>${x.p75_ms??''}</td><td>${x.p95_ms??''}</td><td>${x.p99_ms??''}</td>`;document.getElementById('rt').appendChild(tr);});
+function nodata(ctx){ctx.fillStyle='#6b7280';ctx.fillText('No data available',20,24);} function drawAxes(ctx,w,h){ctx.strokeStyle='#e2e8f0';ctx.strokeRect(42,20,w-62,h-60);ctx.fillStyle='#64748b';ctx.fillText('value',8,16);} 
+function line(id,pts,key,color){const c=document.getElementById(id),ctx=c.getContext('2d');const w=c.width=c.clientWidth*devicePixelRatio,h=c.height=260*devicePixelRatio;ctx.clearRect(0,0,w,h);drawAxes(ctx,w,h);if(!pts.length){nodata(ctx);return;}const vals=pts.map(p=>+p[key]||0),mn=Math.min(...vals),mx=Math.max(...vals);ctx.strokeStyle=color;ctx.beginPath();vals.forEach((v,i)=>{const x=42+i*(w-62)/Math.max(1,vals.length-1),y=h-40-((v-mn)/(mx-mn||1))*(h-60);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();}
+function bar(){const c=document.getElementById('bar'),ctx=c.getContext('2d');const w=c.width=c.clientWidth*devicePixelRatio,h=c.height=260*devicePixelRatio;ctx.clearRect(0,0,w,h);drawAxes(ctx,w,h);const vals=[['NOPM',+r.nopm||0],['TPM',+r.tpm||0]];if(!(vals[0][1]||vals[1][1])){nodata(ctx);return;}const max=Math.max(vals[0][1],vals[1][1],1);vals.forEach((v,i)=>{const bw=120*devicePixelRatio,x=76*devicePixelRatio+i*190*devicePixelRatio,bh=(v[1]/max)*(h-70*devicePixelRatio);ctx.fillStyle=i?'#60a5fa':'#2563eb';ctx.fillRect(x,h-40*devicePixelRatio-bh,bw,bh);ctx.fillStyle='#111';ctx.fillText(v[0],x,h-20*devicePixelRatio);});}
+function box(){const rows=a.response_times?.rows||[];const c=document.getElementById('box'),ctx=c.getContext('2d');const w=c.width=c.clientWidth*devicePixelRatio,h=c.height=260*devicePixelRatio;ctx.clearRect(0,0,w,h);drawAxes(ctx,w,h);if(!rows.length){nodata(ctx);return;}const max=Math.max(...rows.map(r=>+r.p99_ms||0),1);rows.forEach((row,i)=>{const cx=55+i*(w-95)/rows.length;const y=v=>h-40-((+v||0)/max)*(h-60);ctx.strokeStyle='#2563eb';ctx.beginPath();ctx.moveTo(cx,y(row.p99_ms));ctx.lineTo(cx,y(row.p25_ms));ctx.stroke();ctx.fillStyle='#93c5fd';ctx.fillRect(cx-10,y(row.p75_ms),20,y(row.p25_ms)-y(row.p75_ms));ctx.strokeStyle='#111';ctx.beginPath();ctx.moveTo(cx-10,y(row.p50_ms));ctx.lineTo(cx+10,y(row.p50_ms));ctx.stroke();});}
+const tx=((a.transaction_count?.series||[])[0]?.points)||[]; const cpu=a.metrics?.cpu_percent||[]; const iops=a.metrics?.iops||[]; const mbps=a.metrics?.mbps||[];
+function drawAll(){bar();box();line('tx',tx,'value','#2563eb');line('cpu',cpu,'usr_pct','#ef4444');line('iops',iops,'value','#16a34a');line('mbps',mbps,'value','#7c3aed');}
+window.addEventListener('resize',drawAll); drawAll();
+}).catch(e=>{ if(e.message!=='stop') setErr('Unexpected error',`artifact parameter: ${artifactParam}\nresolved fetch URL: ${artifactUrl.href}\n${e.message}`); });
+})();
+</script></body></html>
