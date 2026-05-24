@@ -149,8 +149,8 @@
       addRow('result.nopm', result.nopm);
       addRow('result.tpm', result.tpm);
     } else if (job.benchmark === 'TPROC-H') {
-      addRow('result.geomean', result.geomean);
-      addRow('result.total_query_time', result.total_query_time);
+      addRow('result.geomean_seconds', result.geomean_seconds);
+      addRow('result.total_query_time_seconds', result.total_query_time_seconds);
     } else {
       addRow('result.note', 'Unknown benchmark; showing generic result values only.');
     }
