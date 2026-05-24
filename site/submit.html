@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Submit a HammerDB result artifact</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; line-height: 1.35; }
+    .callout { background: #eef5ff; border: 1px solid #b9d2ff; padding: 0.75rem; margin: 1rem 0; }
+    .note { background: #fff4cc; border: 1px solid #e5c76b; padding: 0.75rem; margin: 1rem 0; }
+    .error { background: #ffecec; border: 1px solid #e09b9b; padding: 0.75rem; margin: 1rem 0; color: #8a1f1f; }
+    .success { background: #ecffef; border: 1px solid #9ed8a9; padding: 0.75rem; margin: 1rem 0; }
+    dl { display: grid; grid-template-columns: 220px 1fr; gap: 0.35rem 0.75rem; }
+    dt { font-weight: bold; }
+    pre { white-space: pre-wrap; word-break: break-word; background: #f6f6f6; border: 1px solid #ddd; padding: 0.75rem; }
+    code { background: #f6f6f6; padding: 0.1rem 0.25rem; }
+    button[disabled] { opacity: 0.6; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <h1>Submit a HammerDB result artifact</h1>
+
+  <div class="callout">
+    <strong>First, star the HammerDB project on GitHub:</strong><br>
+    <a href="https://github.com/TPC-Council/HammerDB">https://github.com/TPC-Council/HammerDB</a>
+  </div>
+
+  <div class="note">
+    Prototype only. Intended live publication path: TPC-Council/hammerdb-results, linked from the TPC HammerDB Artifact Results page.
+  </div>
+
+  <p><strong>Artifact URL:</strong> <code id="artifact-url">(none)</code></p>
+
+  <div id="status"></div>
+
+  <h2>Artifact preview</h2>
+  <dl id="preview"></dl>
+
+  <h3>Computed target repository path</h3>
+  <pre id="target-path">(not available)</pre>
+
+  <h3>Raw artifact JSON</h3>
+  <pre id="raw-json">(not loaded)</pre>
+
+  <h2>GitHub pull request submission (next iteration)</h2>
+  <button type="button" disabled>Submit artifact pull request</button>
+  <p>GitHub-authenticated pull request creation will be added in the next iteration.</p>
+
+<script>
+(function () {
+  const statusEl = document.getElementById('status');
+  const previewEl = document.getElementById('preview');
+  const rawEl = document.getElementById('raw-json');
+  const targetPathEl = document.getElementById('target-path');
+  const artifactUrlEl = document.getElementById('artifact-url');
+
+  function setStatus(message, kind) {
+    statusEl.className = kind;
+    statusEl.textContent = message;
+  }
+
+  function slugify(value) {
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function parseTimestampParts(timestamp) {
+    if (!timestamp) return null;
+    const normalized = String(timestamp).replace('T', ' ');
+    const m = normalized.match(/^(\d{4})-(\d{2})-(\d{2})\s/);
+    if (!m) return null;
+    return { year: m[1], month: m[2] };
+  }
+
+  function addRow(name, value) {
+    const dt = document.createElement('dt');
+    dt.textContent = name;
+    const dd = document.createElement('dd');
+    dd.textContent = value == null || value === '' ? '(missing)' : String(value);
+    previewEl.appendChild(dt);
+    previewEl.appendChild(dd);
+  }
+
+  function clearPreview() {
+    previewEl.innerHTML = '';
+  }
+
+  async function run() {
+    const params = new URLSearchParams(window.location.search);
+    const artifactUrl = params.get('artifact_url');
+
+    if (!artifactUrl) {
+      setStatus('Missing required query parameter: artifact_url', 'error');
+      return;
+    }
+
+    artifactUrlEl.textContent = artifactUrl;
+
+    let response;
+    try {
+      response = await fetch(artifactUrl, { headers: { 'Accept': 'application/json' } });
+    } catch (err) {
+      setStatus('Failed to fetch artifact_url. Check network access and URL validity.', 'error');
+      return;
+    }
+
+    if (!response.ok) {
+      setStatus('Failed to fetch artifact_url. HTTP status: ' + response.status, 'error');
+      return;
+    }
+
+    const rawText = await response.text();
+    let artifact;
+    try {
+      artifact = JSON.parse(rawText);
+    } catch (err) {
+      setStatus('Fetched content is not valid JSON.', 'error');
+      rawEl.textContent = rawText;
+      return;
+    }
+
+    rawEl.textContent = JSON.stringify(artifact, null, 2);
+
+    const job = artifact.job || {};
+    const result = artifact.result || {};
+
+    const required = ['jobid', 'benchmark', 'database', 'database_display', 'timestamp', 'hdb_version'];
+    const missing = required.filter((k) => !job[k]);
+    if (missing.length > 0) {
+      setStatus('Missing required job fields: ' + missing.join(', '), 'error');
+      clearPreview();
+      required.forEach((k) => addRow('job.' + k, job[k]));
+      return;
+    }
+
+    clearPreview();
+    addRow('job.jobid', job.jobid);
+    addRow('job.benchmark', job.benchmark);
+    addRow('job.database', job.database);
+    addRow('job.database_display', job.database_display);
+    addRow('job.release', job.release);
+    addRow('job.timestamp', job.timestamp);
+    addRow('job.hdb_version', job.hdb_version);
+
+    if (job.benchmark === 'TPROC-C') {
+      addRow('result.nopm', result.nopm);
+      addRow('result.tpm', result.tpm);
+    } else if (job.benchmark === 'TPROC-H') {
+      addRow('result.geomean_seconds', result.geomean_seconds);
+      addRow('result.total_query_time_seconds', result.total_query_time_seconds);
+    } else {
+      addRow('result.note', 'Unknown benchmark; showing generic result values only.');
+    }
+
+    const timestampParts = parseTimestampParts(job.timestamp);
+    if (!timestampParts) {
+      setStatus('Missing required fields for path computation: timestamp format invalid (expected YYYY-MM-DD ...).', 'error');
+      return;
+    }
+
+    const benchmarkSlug = slugify(job.benchmark);
+    const databaseSlug = slugify(job.database_display);
+    const targetPath = `results/${benchmarkSlug}/${databaseSlug}/${timestampParts.year}/${timestampParts.month}/${job.jobid}.json`;
+    targetPathEl.textContent = targetPath;
+
+    setStatus('Artifact loaded successfully. Preview and target path are ready.', 'success');
+  }
+
+  run();
+})();
+</script>
+</body>
+</html>
