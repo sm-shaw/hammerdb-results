@@ -46,6 +46,7 @@ def _load_rows() -> list[dict]:
         r["rank"] = i
     return rows
 
+
 def _write_json(rows: list[dict]) -> None:
     payload = {
         "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
