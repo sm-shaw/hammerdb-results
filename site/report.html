@@ -49,8 +49,10 @@ table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #e8edf7;
   if (!artifactParam) { fail('Missing artifact parameter', 'Add ?artifact=<encoded artifact path> to the URL.'); return; }
   let artifact;
   try { artifact = decodeURIComponent(artifactParam); } catch { artifact = artifactParam; }
+  const cleanArtifact = String(artifact || '').replace(/^\/+/, '');
+  const siteBase = new URL('./', window.location.href);
   let artifactUrl;
-  try { artifactUrl = new URL(artifact, window.location.href); } catch { fail('Invalid artifact path', 'Could not resolve artifact URL from the query parameter.'); return; }
+  try { artifactUrl = new URL(cleanArtifact, siteBase); } catch { fail('Invalid artifact path', 'Could not resolve artifact URL from the query parameter.'); return; }
 
   const ctx = (id) => document.getElementById(id).getContext('2d');
   const nodata = (context) => { const w = context.canvas.width, h = context.canvas.height; context.clearRect(0,0,w,h); context.fillStyle='#64748b'; context.font='14px sans-serif'; context.fillText('No data available',16,26); };
