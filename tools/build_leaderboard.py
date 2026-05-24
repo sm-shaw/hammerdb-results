@@ -7,6 +7,7 @@ import json
 from datetime import datetime, timezone
 from html import escape
 from pathlib import Path
+from urllib.parse import quote
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 RESULTS_ROOT = REPO_ROOT / "results"
@@ -26,9 +27,6 @@ def _load_rows() -> list[dict]:
         result = payload.get("result", {})
         system = payload.get("system", {})
 
-        if job.get("benchmark") != "TPROC-C":
-            continue
-
         row = {
             "jobid": job.get("jobid"),
             "benchmark": job.get("benchmark"),
@@ -39,6 +37,8 @@ def _load_rows() -> list[dict]:
             "hdb_version": job.get("hdb_version"),
             "nopm": result.get("nopm"),
             "tpm": result.get("tpm"),
+            "geomean_seconds": result.get("geomean_seconds"),
+            "total_query_time_seconds": result.get("total_query_time_seconds"),
             "warehouses": cfg.get("warehouses"),
             "virtual_users": cfg.get("virtual_users"),
             "rampup_minutes": cfg.get("rampup_minutes"),
@@ -77,17 +77,35 @@ def _write_json(rows: list[dict]) -> None:
     LEADERBOARD_JSON.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def _metric_summary(row: dict) -> str:
+    if row.get("benchmark") == "TPROC-C":
+        return f"NOPM {row.get('nopm', '—')} · TPM {row.get('tpm', '—')}"
+    return f"Geomean(s) {row.get('geomean_seconds', '—')} · Total Query(s) {row.get('total_query_time_seconds', '—')}"
+
+
 def _write_html(rows: list[dict]) -> None:
-    columns = [
-        "rank", "jobid", "benchmark", "database", "database_display", "release", "timestamp", "hdb_version",
-        "nopm", "tpm", "warehouses", "virtual_users", "rampup_minutes", "duration_minutes",
-        "cpu_model", "cpu_count", "memory", "system_type", "os_name", "storage", "source_path"
-    ]
-    header = "".join(f"<th>{escape(col)}</th>" for col in columns)
-    body = []
+    cards = []
     for row in rows:
-        cells = "".join(f"<td>{escape(str(row.get(col, '')))}</td>" for col in columns)
-        body.append(f"<tr>{cells}</tr>")
+        report_href = f"report.html?artifact={quote(row.get('source_path', ''), safe='')}"
+        config_bits = []
+        if row.get("warehouses") is not None:
+            config_bits.append(f"Warehouses: {row['warehouses']}")
+        if row.get("virtual_users") is not None:
+            config_bits.append(f"Virtual users: {row['virtual_users']}")
+        config_text = " · ".join(config_bits) if config_bits else "Benchmark configuration in report"
+        cards.append(
+            f"""
+      <article class="result-card">
+        <div class="row-top"><span class="rank">#{escape(str(row.get('rank', '')))}</span><span class="db">{escape(str(row.get('database_display', '')))}</span></div>
+        <div class="meta">{escape(str(row.get('release', '')))} · {escape(str(row.get('benchmark', '')))} · {escape(str(row.get('hdb_version', '')))}</div>
+        <div class="meta">{escape(str(row.get('timestamp', '')))}</div>
+        <div class="headline">{escape(_metric_summary(row))}</div>
+        <div class="meta">{escape(config_text)}</div>
+        <a class="btn" href="{escape(report_href)}">View report</a>
+      </article>
+            """.rstrip()
+        )
+
     html = f"""<!doctype html>
 <html lang=\"en\">
 <head>
@@ -95,39 +113,52 @@ def _write_html(rows: list[dict]) -> None:
   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
   <title>HammerDB Result Artifacts Prototype</title>
   <style>
-    body {{ font-family: Arial, sans-serif; margin: 2rem; line-height: 1.35; }}
-    table {{ border-collapse: collapse; width: 100%; font-size: 0.9rem; }}
-    th, td {{ border: 1px solid #ccc; padding: 0.35rem; text-align: left; vertical-align: top; }}
-    th {{ background: #f3f3f3; position: sticky; top: 0; }}
-    .messages p {{ margin: 0.2rem 0; font-weight: bold; }}
-    .note {{ background: #fff4cc; border: 1px solid #e5c76b; padding: 0.75rem; margin: 1rem 0; }}
-    .cta {{ background: #eef5ff; border: 1px solid #b9d2ff; padding: 0.75rem; margin: 1rem 0; }}
-    .scroll {{ overflow-x: auto; }}
+    :root {{ --bg:#0b1020; --surface:#131a2e; --text:#e9eefb; --muted:#a9b5d6; --accent:#7aa2ff; --warn:#ffd98a; --ok:#9ce0aa; }}
+    body {{ margin:0; font-family:Inter,Arial,sans-serif; background:#f4f7ff; color:#10162a; }}
+    .wrap {{ max-width: 1024px; margin: 0 auto; padding: 24px; }}
+    .hero {{ background:linear-gradient(140deg,var(--bg),#1c2a52); color:var(--text); border-radius:16px; padding:24px; }}
+    .hero h1 {{ margin:0 0 10px; font-size:1.9rem; }}
+    .hero p {{ margin:6px 0; color:var(--muted); }}
+    .notice,.cta,.disclaimer {{ margin-top:16px; border-radius:12px; padding:14px 16px; background:#fff; border:1px solid #d8e0f4; }}
+    .notice {{ border-left:5px solid #f0b429; }}
+    .cta {{ border-left:5px solid #4a90e2; }}
+    .disclaimer {{ border-left:5px solid #8f9bb3; }}
+    .grid {{ margin-top:18px; display:grid; gap:14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }}
+    .result-card {{ background:#fff; border:1px solid #d8e0f4; border-radius:14px; padding:14px; box-shadow:0 2px 10px rgba(9,30,66,.06); }}
+    .row-top {{ display:flex; justify-content:space-between; align-items:center; }}
+    .rank {{ background:#eef3ff; color:#2b4ca7; font-weight:700; border-radius:999px; padding:4px 10px; }}
+    .db {{ font-weight:700; font-size:1.08rem; }}
+    .meta {{ color:#4a5678; margin-top:6px; font-size:.95rem; }}
+    .headline {{ margin-top:10px; font-weight:700; }}
+    .btn {{ display:inline-block; margin-top:12px; background:var(--accent); color:white; text-decoration:none; padding:8px 12px; border-radius:8px; }}
   </style>
 </head>
 <body>
-  <h1>HammerDB Result Artifacts Prototype</h1>
-  <div class=\"note\">
-    <strong>Prototype only.</strong> Intended live publication path: TPC-Council/hammerdb-results, linked from the TPC HammerDB Artifact Results page.
-  </div>
-  <div class=\"cta\">
-    <h2>Submit a HammerDB result artifact</h2>
-    <p>First, star the HammerDB project on GitHub: <a href=\"https://github.com/TPC-Council/HammerDB\">https://github.com/TPC-Council/HammerDB</a></p>
-    <p><a href=\"submit.html\">Submit a HammerDB result artifact</a></p>
-  </div>
-  <div class=\"messages\">
-    <p>Community-submitted HammerDB results</p>
-    <p>Unaudited</p>
-    <p>Not official TPC benchmark results</p>
-  </div>
-  <div class=\"scroll\">
-    <table>
-      <thead><tr>{header}</tr></thead>
-      <tbody>
-        {''.join(body)}
-      </tbody>
-    </table>
-  </div>
+  <main class=\"wrap\">
+    <section class=\"hero\">
+      <h1>HammerDB Result Artifacts Prototype</h1>
+      <p>Modern prototype leaderboard generated from GitHub-reviewed HammerDB summaryjson artifacts.</p>
+      <p>Intended live publication path: TPC-Council/hammerdb-results.</p>
+    </section>
+
+    <section class=\"notice\">
+      <strong>Prototype only.</strong> Intended live publication path: TPC-Council/hammerdb-results, linked from the TPC HammerDB Artifact Results page.
+    </section>
+
+    <section class=\"cta\">
+      <strong>First, star the HammerDB project on GitHub:</strong>
+      <a href=\"https://github.com/TPC-Council/HammerDB\">https://github.com/TPC-Council/HammerDB</a>
+      <p>To submit a result, open the benchmark report in HammerDB and use Share with TPC-OSS.</p>
+    </section>
+
+    <section class=\"disclaimer\">
+      <div>Community-submitted HammerDB results</div>
+      <div>Unaudited</div>
+      <div>Not official TPC benchmark results</div>
+    </section>
+
+    <section class=\"grid\">{''.join(cards)}</section>
+  </main>
 </body>
 </html>
 """

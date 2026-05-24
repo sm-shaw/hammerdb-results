@@ -5,38 +5,59 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>HammerDB Result Artifacts Prototype</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; line-height: 1.35; }
-    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
-    th, td { border: 1px solid #ccc; padding: 0.35rem; text-align: left; vertical-align: top; }
-    th { background: #f3f3f3; position: sticky; top: 0; }
-    .messages p { margin: 0.2rem 0; font-weight: bold; }
-    .note { background: #fff4cc; border: 1px solid #e5c76b; padding: 0.75rem; margin: 1rem 0; }
-    .cta { background: #eef5ff; border: 1px solid #b9d2ff; padding: 0.75rem; margin: 1rem 0; }
-    .scroll { overflow-x: auto; }
+    :root { --bg:#0b1020; --surface:#131a2e; --text:#e9eefb; --muted:#a9b5d6; --accent:#7aa2ff; --warn:#ffd98a; --ok:#9ce0aa; }
+    body { margin:0; font-family:Inter,Arial,sans-serif; background:#f4f7ff; color:#10162a; }
+    .wrap { max-width: 1024px; margin: 0 auto; padding: 24px; }
+    .hero { background:linear-gradient(140deg,var(--bg),#1c2a52); color:var(--text); border-radius:16px; padding:24px; }
+    .hero h1 { margin:0 0 10px; font-size:1.9rem; }
+    .hero p { margin:6px 0; color:var(--muted); }
+    .notice,.cta,.disclaimer { margin-top:16px; border-radius:12px; padding:14px 16px; background:#fff; border:1px solid #d8e0f4; }
+    .notice { border-left:5px solid #f0b429; }
+    .cta { border-left:5px solid #4a90e2; }
+    .disclaimer { border-left:5px solid #8f9bb3; }
+    .grid { margin-top:18px; display:grid; gap:14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .result-card { background:#fff; border:1px solid #d8e0f4; border-radius:14px; padding:14px; box-shadow:0 2px 10px rgba(9,30,66,.06); }
+    .row-top { display:flex; justify-content:space-between; align-items:center; }
+    .rank { background:#eef3ff; color:#2b4ca7; font-weight:700; border-radius:999px; padding:4px 10px; }
+    .db { font-weight:700; font-size:1.08rem; }
+    .meta { color:#4a5678; margin-top:6px; font-size:.95rem; }
+    .headline { margin-top:10px; font-weight:700; }
+    .btn { display:inline-block; margin-top:12px; background:var(--accent); color:white; text-decoration:none; padding:8px 12px; border-radius:8px; }
   </style>
 </head>
 <body>
-  <h1>HammerDB Result Artifacts Prototype</h1>
-  <div class="note">
-    <strong>Prototype only.</strong> Intended live publication path: TPC-Council/hammerdb-results, linked from the TPC HammerDB Artifact Results page.
-  </div>
-  <div class="cta">
-    <h2>Submit a HammerDB result artifact</h2>
-    <p>First, star the HammerDB project on GitHub: <a href="https://github.com/TPC-Council/HammerDB">https://github.com/TPC-Council/HammerDB</a></p>
-    <p><a href="submit.html">Submit a HammerDB result artifact</a></p>
-  </div>
-  <div class="messages">
-    <p>Community-submitted HammerDB results</p>
-    <p>Unaudited</p>
-    <p>Not official TPC benchmark results</p>
-  </div>
-  <div class="scroll">
-    <table>
-      <thead><tr><th>rank</th><th>jobid</th><th>benchmark</th><th>database</th><th>database_display</th><th>release</th><th>timestamp</th><th>hdb_version</th><th>nopm</th><th>tpm</th><th>warehouses</th><th>virtual_users</th><th>rampup_minutes</th><th>duration_minutes</th><th>cpu_model</th><th>cpu_count</th><th>memory</th><th>system_type</th><th>os_name</th><th>storage</th><th>source_path</th></tr></thead>
-      <tbody>
-        <tr><td>1</td><td>6A0D4536FD5E03E223237363</td><td>TPROC-C</td><td>MariaDB</td><td>MariaDB</td><td>13.0.1</td><td>2026-05-20 07:23:02</td><td>v5.0</td><td>586379</td><td>1362335</td><td>240</td><td>56</td><td>2</td><td>5</td><td>Intel(R) Xeon(R) Gold 5412U</td><td>48</td><td>125.5 GB</td><td>SPC741D8UD-2T/X550/H</td><td>Ubuntu 24.04.1 LTS</td><td>INTEL SSDPF2KX038T1 (3577 GB); INTEL SSDPF2KX038T1 (3577 GB)</td><td>results/tproc-c/mariadb/2026/05/6A0D4536FD5E03E223237363.json</td></tr>
-      </tbody>
-    </table>
-  </div>
+  <main class="wrap">
+    <section class="hero">
+      <h1>HammerDB Result Artifacts Prototype</h1>
+      <p>Modern prototype leaderboard generated from GitHub-reviewed HammerDB summaryjson artifacts.</p>
+      <p>Intended live publication path: TPC-Council/hammerdb-results.</p>
+    </section>
+
+    <section class="notice">
+      <strong>Prototype only.</strong> Intended live publication path: TPC-Council/hammerdb-results, linked from the TPC HammerDB Artifact Results page.
+    </section>
+
+    <section class="cta">
+      <strong>First, star the HammerDB project on GitHub:</strong>
+      <a href="https://github.com/TPC-Council/HammerDB">https://github.com/TPC-Council/HammerDB</a>
+      <p>To submit a result, open the benchmark report in HammerDB and use Share with TPC-OSS.</p>
+    </section>
+
+    <section class="disclaimer">
+      <div>Community-submitted HammerDB results</div>
+      <div>Unaudited</div>
+      <div>Not official TPC benchmark results</div>
+    </section>
+
+    <section class="grid">
+      <article class="result-card">
+        <div class="row-top"><span class="rank">#1</span><span class="db">MariaDB</span></div>
+        <div class="meta">13.0.1 · TPROC-C · v5.0</div>
+        <div class="meta">2026-05-20 07:23:02</div>
+        <div class="headline">NOPM 586379 · TPM 1362335</div>
+        <div class="meta">Warehouses: 240 · Virtual users: 56</div>
+        <a class="btn" href="report.html?artifact=results%2Ftproc-c%2Fmariadb%2F2026%2F05%2F6A0D4536FD5E03E223237363.json">View report</a>
+      </article></section>
+  </main>
 </body>
 </html>
