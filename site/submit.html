@@ -5,38 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Submit HammerDB Result Artifact</title>
   <style>
-    :root{--bg:#f4f7ff;--card:#fff;--line:#dbe4f0;--text:#0f172a;--muted:#64748b;--blue:#2563eb;--navy:#08112f;--navy2:#12275f;--good:#15803d;--good-bg:#f0fdf4;--good-line:#bbf7d0;--warn:#b45309;--warn-bg:#fff7ed;--warn-line:#fdba74;--err:#be123c;--err-bg:#fff1f2;--err-line:#fecdd3;--info:#1d4ed8;--info-bg:#eff6ff;--info-line:#bfdbfe}
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--text);line-height:1.5}
-    .wrap{max-width:1120px;margin:0 auto;padding:0 20px 30px}
-    .hero{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:48px 0 40px;margin-bottom:22px}
-    .hero h1{margin:10px 0 12px;font-size:clamp(2rem,4vw,2.8rem);line-height:1.1}
-    .hero p{max-width:820px;color:#d8e2ff;margin:0}
-    .badges{display:flex;gap:8px;flex-wrap:wrap}.badge{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.26);font-weight:700;font-size:.84rem}
-    .hero-warn{margin-top:18px;padding:12px 14px;border-radius:12px;background:rgba(245,158,11,.16);border:1px solid rgba(245,158,11,.35);color:#ffe7bd;font-weight:600}
-    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.05);margin-bottom:14px}
-    .card h2,.card h3{margin:0 0 8px}.card p{margin:0 0 12px}.muted{color:var(--muted)}
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;background:#111827;color:#fff;text-decoration:none;padding:10px 14px;font-weight:800;cursor:pointer;font:inherit;font-size:.94rem}
-    .btn.primary{background:var(--blue)}.btn.secondary{background:#e9efff;color:#1e3a8a}.btn:disabled{opacity:.55;cursor:not-allowed}.star{color:#facc15;font-size:1.05rem;line-height:1}
-    .status{border-radius:14px;padding:14px 16px;margin-bottom:14px;border:1px solid var(--info-line);background:var(--info-bg);color:#1e3a8a}.status h3{margin:0 0 4px}.status p{margin:0}.status.success{border-color:var(--good-line);background:var(--good-bg);color:var(--good)}.status.warning{border-color:var(--warn-line);background:var(--warn-bg);color:var(--warn)}.status.error{border-color:var(--err-line);background:var(--err-bg);color:var(--err)}
-    .summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.summary-item{background:#f8fbff;border:1px solid #e6edf8;border-radius:12px;padding:10px}.summary-item .label{font-size:.76rem;text-transform:uppercase;color:var(--muted);font-weight:800;letter-spacing:.02em}.summary-item .value{font-weight:800;word-break:break-word;margin-top:3px}.summary-item.metric{background:#eef4ff;border-color:#d5e3ff}
-    .path-box,.code-box{background:#0b1020;color:#dbeafe;border-radius:12px;padding:12px;overflow:auto;white-space:pre-wrap;word-break:break-word;border:1px solid #172554;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.88rem}
-    .button-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}.copy-note{color:var(--good);font-weight:800;font-size:.88rem;min-height:1.2em}
-    details{border:1px solid var(--line);border-radius:14px;background:#fff;padding:12px}summary{cursor:pointer;font-weight:800}.details-body{margin-top:12px}.compact{font-size:.9rem}.steps{margin:8px 0 0;padding-left:1.3rem}.steps li{margin:5px 0}.technical{margin-top:10px}.technical code{display:block;background:#f8fbff;border:1px solid #e6edf8;border-radius:10px;padding:10px;white-space:nowrap;overflow:auto;color:#334155}
-    @media(max-width:860px){.grid,.summary{grid-template-columns:1fr}.hero{padding:38px 0 32px}.wrap{padding-left:16px;padding-right:16px}}
+    body { font-family: Arial, sans-serif; margin: 2rem; line-height: 1.35; }
+    .note { background: #fff4cc; border: 1px solid #e5c76b; padding: 0.75rem; margin: 1rem 0; }
+    .error { background: #ffecec; border: 1px solid #e09b9b; padding: 0.75rem; margin: 1rem 0; color: #8a1f1f; }
+    .success { background: #ecffef; border: 1px solid #9ed8a9; padding: 0.75rem; margin: 1rem 0; }
+    dl { display: grid; grid-template-columns: 220px 1fr; gap: 0.35rem 0.75rem; }
+    dt { font-weight: bold; }
+    pre { white-space: pre-wrap; word-break: break-word; background: #f6f6f6; border: 1px solid #ddd; padding: 0.75rem; }
+    code { background: #f6f6f6; padding: 0.1rem 0.25rem; }
+    button[disabled] { opacity: 0.6; cursor: not-allowed; }
+    details { margin: 1rem 0; }
+    #copy-status { margin-left: 0.5rem; font-weight: bold; }
   </style>
 </head>
 <body>
   <h1>Submit HammerDB Result Artifact</h1>
 
-  <div class="callout">
-    <strong>Star HammerDB on GitHub</strong><br>
-    Before submitting, please star the HammerDB project on GitHub and help others discover the project.<br>
-    <a id="star-link" href="https://github.com/TPC-Council/HammerDB">★ Star HammerDB</a>
-  </div>
-
   <div class="note">
-    Workflow: copy the artifact JSON, open GitHub to create the result file, paste the JSON into the new file, then use GitHub to propose the change and open the pull request. If you do not have write access, GitHub will guide you through the fork and propose-changes flow.
+    Copy the artifact JSON, open GitHub, paste it into the new file, then use GitHub to propose the change and open the pull request. If you do not have write access, GitHub will guide you through the fork/propose-changes flow.
   </div>
 
     <section id="artifact-details" class="card" hidden>
@@ -60,20 +46,16 @@
       <div class="button-row"><button id="copy-path" type="button" class="btn secondary">Copy path</button><span id="copy-path-note" class="copy-note" aria-live="polite"></span></div>
     </section>
 
-    <section class="card">
-      <details id="raw-details">
-        <summary>Show raw artifact JSON</summary>
-        <div class="details-body">
-          <pre id="raw-json" class="code-box">Artifact JSON has not loaded yet.</pre>
-          <div class="button-row"><button id="copy-json-raw" type="button" class="btn secondary" disabled>Copy JSON</button><span id="copy-json-raw-note" class="copy-note" aria-live="polite"></span></div>
-        </div>
-      </details>
-    </section>
+  <h2>Target repository path</h2>
+  <pre id="target-path">(not available)</pre>
 
-  <h3>Raw artifact JSON</h3>
-  <pre id="raw-json">(not loaded)</pre>
+  <h2>Raw artifact JSON</h2>
+  <details>
+    <summary>Show raw artifact JSON</summary>
+    <pre id="raw-json">(not loaded)</pre>
+  </details>
 
-  <h2>Create pull request</h2>
+  <h2>Submit to GitHub</h2>
   <button id="copy-json" type="button" disabled>Copy artifact JSON</button>
   <button id="create-pr" type="button" disabled>Create pull request</button>
   <span id="copy-status" aria-live="polite"></span>
@@ -83,7 +65,6 @@
   const TARGET_OWNER = 'sm-shaw';
   const TARGET_REPO = 'hammerdb-results';
   const TARGET_BRANCH = 'master';
-  const HAMMERDB_PROJECT_URL = 'https://github.com/TPC-Council/HammerDB';
 
   const statusEl = document.getElementById('status');
   const previewEl = document.getElementById('preview');
@@ -93,12 +74,9 @@
   const copyJsonButton = document.getElementById('copy-json');
   const createPrButton = document.getElementById('create-pr');
   const copyStatusEl = document.getElementById('copy-status');
-  const starLinkEl = document.getElementById('star-link');
 
   let rawJson = '';
   let targetPath = '';
-
-  starLinkEl.href = HAMMERDB_PROJECT_URL;
 
   function setStatus(message, kind) {
     statusEl.className = kind;
@@ -115,109 +93,9 @@
 
   function parseTimestampParts(timestamp) {
     if (!timestamp) return null;
-    const normalized = String(timestamp).replace("T", " ");
-    const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})(?:\s|$)/);
-    if (!match) return null;
-    return { year: match[1], month: match[2] };
-  }
-
-  function formatNumber(value) {
-    const number = Number(value);
-    if (!Number.isFinite(number)) return value;
-    return number.toLocaleString();
-  }
-
-  function buildSubmissionPayload() {
-    const message = "Add HammerDB result artifact " + currentJobId;
-    return {
-      target_owner: TARGET_OWNER,
-      target_repo: TARGET_REPO,
-      target_branch: TARGET_BRANCH,
-      target_path: targetPath,
-      branch_name: "submit/" + currentDatabaseSlug + "/" + currentJobId,
-      artifact: currentArtifact,
-      artifact_json: rawJson,
-      commit_message: message,
-      pr_title: message,
-      pr_body: "Community-submitted HammerDB result artifact."
-    };
-  }
-
-  async function copyText(text, noteEl) {
-    if (!text) return;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(text);
-    } else {
-      const textarea = document.createElement("textarea");
-      textarea.value = text;
-      textarea.setAttribute("readonly", "");
-      textarea.style.position = "fixed";
-      textarea.style.left = "-9999px";
-      document.body.appendChild(textarea);
-      textarea.select();
-      const copied = document.execCommand("copy");
-      textarea.remove();
-      if (!copied) {
-        throw new Error("Copy command was not successful");
-      }
-    }
-    noteEl.textContent = "Copied";
-    window.setTimeout(() => { noteEl.textContent = ""; }, 1800);
-  }
-
-  function showRawJson(text) {
-    rawJson = text;
-    rawEl.textContent = text || "Artifact JSON has not loaded yet.";
-    copyJsonRawButton.disabled = !text;
-  }
-
-  function showMissingFields(job, required, missing) {
-    clearPreview();
-    required.forEach((field) => addPreviewItem(field.replace(/_/g, " "), job[field], false));
-    previewCardEl.hidden = false;
-    setStatus("Missing required fields", "The artifact is missing required job fields: " + missing.join(", ") + ".", "error");
-  }
-
-  function configureSubmissionButton() {
-    createPrButton.disabled = !targetPath || !currentArtifact || submitting;
-  }
-
-  function prepareSubmission(job, result, artifact) {
-    clearPreview();
-    addPreviewItem("Job ID", job.jobid, false);
-    addPreviewItem("Benchmark", job.benchmark, false);
-    addPreviewItem("Database", job.database_display || job.database, false);
-    addPreviewItem("Release", job.release, false);
-    addPreviewItem("Timestamp", job.timestamp, false);
-    addPreviewItem("HammerDB version", job.hdb_version, false);
-
-    if (job.benchmark === "TPROC-C") {
-      addPreviewItem("NOPM", formatNumber(result.nopm), true);
-      addPreviewItem("TPM", formatNumber(result.tpm), true);
-    } else if (job.benchmark === "TPROC-H") {
-      addPreviewItem("Geomean seconds", formatNumber(result.geomean_seconds), true);
-      addPreviewItem("Total query time seconds", formatNumber(result.total_query_time_seconds), true);
-    }
-
-    const timestampParts = parseTimestampParts(job.timestamp);
-    if (!timestampParts) {
-      previewCardEl.hidden = false;
-      setStatus("Invalid timestamp", "The artifact timestamp must start with YYYY-MM-DD so the target path can be computed.", "error");
-      return;
-    }
-
-    const benchmarkSlug = slugify(job.benchmark);
-    const databaseSlug = slugify(job.database_display);
-    currentDatabaseSlug = databaseSlug;
-    targetPath = "results/" + benchmarkSlug + "/" + databaseSlug + "/" + timestampParts.year + "/" + timestampParts.month + "/" + job.jobid + ".json";
-    currentArtifact = artifact;
-    currentJobId = job.jobid;
-    targetPathEl.textContent = targetPath;
-    targetCardEl.hidden = false;
-    previewCardEl.hidden = false;
-
-    configureSubmissionButton();
-    setStatus("Artifact loaded and ready", "Preview, validation, and target path are ready.", "success");
+    const m = String(timestamp).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return null;
+    return { year: m[1], month: m[2] };
   }
 
   async function createPullRequest() {
@@ -288,6 +166,36 @@
     window.setTimeout(() => { copyStatusEl.textContent = ''; }, 1800);
   }
 
+  function buildGitHubNewFileUrl(path) {
+    return `https://github.com/${TARGET_OWNER}/${TARGET_REPO}/new/${TARGET_BRANCH}?filename=${encodeURIComponent(path)}`;
+  }
+
+  async function copyText(text) {
+    if (!text) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+    }
+    copyStatusEl.textContent = 'Copied';
+    window.setTimeout(() => { copyStatusEl.textContent = ''; }, 1800);
+  }
+
+  function showLoadError(artifactUrl) {
+    setStatus(
+      `Could not load artifact JSON from:\n${artifactUrl}\n\nCheck that the HammerDB web service is running and that the artifact URL is reachable from this browser.`,
+      'error'
+    );
+  }
+
   async function run() {
     const params = new URLSearchParams(window.location.search);
     const artifactUrl = params.get("artifact_url");
@@ -305,12 +213,12 @@
     try {
       response = await fetch(artifactUrl, { headers: { "Accept": "application/json" } });
     } catch (err) {
-      setStatus("Fetch failed", "Failed to fetch artifact_url. Check network access and URL validity.", "error");
+      showLoadError(artifactUrl);
       return;
     }
 
     if (!response.ok) {
-      setStatus("Fetch failed", "Failed to fetch artifact_url. HTTP status: " + response.status + ".", "error");
+      showLoadError(artifactUrl);
       return;
     }
 
@@ -319,8 +227,8 @@
     try {
       artifact = JSON.parse(rawText);
     } catch (err) {
-      showRawJson(rawText);
-      setStatus("Invalid JSON", "Fetched content is not valid JSON. The raw response is available below for troubleshooting.", "error");
+      showLoadError(artifactUrl);
+      rawEl.textContent = rawText;
       return;
     }
 
@@ -351,8 +259,6 @@
     } else if (job.benchmark === 'TPROC-H') {
       addRow('Geomean seconds', result.geomean_seconds);
       addRow('Total query time seconds', result.total_query_time_seconds);
-    } else {
-      addRow('result.note', 'Unknown benchmark; showing generic result values only.');
     }
 
     const timestampParts = parseTimestampParts(job.timestamp);
