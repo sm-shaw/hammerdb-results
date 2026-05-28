@@ -25,12 +25,26 @@
     Copy the artifact JSON, open GitHub, paste it into the new file, then use GitHub to propose the change and open the pull request. If you do not have write access, GitHub will guide you through the fork/propose-changes flow.
   </div>
 
-  <p><strong>Artifact URL:</strong> <code id="artifact-url">(none)</code></p>
+    <section id="artifact-details" class="card" hidden>
+      <h2>Artifact source</h2>
+      <p class="muted compact">The artifact URL was provided by HammerDB.</p>
+      <details class="technical">
+        <summary>Show artifact URL</summary>
+        <code id="artifact-url"></code>
+      </details>
+    </section>
 
-  <div id="status"></div>
+    <section id="preview-card" class="card" hidden>
+      <h2>Artifact preview</h2>
+      <div id="preview" class="summary"></div>
+    </section>
 
-  <h2>Artifact preview</h2>
-  <dl id="preview"></dl>
+    <section id="target-card" class="card" hidden>
+      <h2>Target repository path</h2>
+      <p class="muted">The JSON artifact will be submitted at this computed path.</p>
+      <pre id="target-path" class="path-box"></pre>
+      <div class="button-row"><button id="copy-path" type="button" class="btn secondary">Copy path</button><span id="copy-path-note" class="copy-note" aria-live="polite"></span></div>
+    </section>
 
   <h2>Target repository path</h2>
   <pre id="target-path">(not available)</pre>
@@ -70,11 +84,11 @@
   }
 
   function slugify(value) {
-    return String(value || '')
+    return String(value || "")
       .trim()
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
   }
 
   function parseTimestampParts(timestamp) {
@@ -84,17 +98,72 @@
     return { year: m[1], month: m[2] };
   }
 
-  function addRow(name, value) {
-    const dt = document.createElement('dt');
-    dt.textContent = name;
-    const dd = document.createElement('dd');
-    dd.textContent = value == null || value === '' ? '(missing)' : String(value);
-    previewEl.appendChild(dt);
-    previewEl.appendChild(dd);
+  async function createPullRequest() {
+    if (!SUBMIT_ENDPOINT || !targetPath || !currentArtifact || submitting) return;
+    submitting = true;
+    createPrButton.disabled = true;
+    setStatus("Creating pull request", "Creating a GitHub pull request for this HammerDB artifact…", "");
+
+    let response;
+    try {
+      response = await fetch(SUBMIT_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(buildSubmissionPayload())
+      });
+    } catch (err) {
+      submitting = false;
+      configureSubmissionButton();
+      setStatus("Pull request creation failed", "The pull request could not be created. Please try again.", "error");
+      return;
+    }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (err) {
+      data = { ok: false, error: "The pull request workflow returned an invalid response." };
+    }
+
+    if (!response.ok || !data.ok) {
+      submitting = false;
+      configureSubmissionButton();
+      setStatus("Pull request creation failed", data.error || "The pull request could not be created.", "error");
+      return;
+    }
+
+    if (!data.pr_url) {
+      submitting = false;
+      configureSubmissionButton();
+      setStatus("Pull request creation failed", "The pull request workflow did not return a GitHub PR URL.", "error");
+      return;
+    }
+
+    setStatus("Pull request created", "Pull request created. Opening PR for review.", "success");
+    window.location.href = data.pr_url;
   }
 
-  function clearPreview() {
-    previewEl.innerHTML = '';
+  function buildGitHubNewFileUrl(path) {
+    return `https://github.com/${TARGET_OWNER}/${TARGET_REPO}/new/${TARGET_BRANCH}?filename=${encodeURIComponent(path)}`;
+  }
+
+  async function copyText(text) {
+    if (!text) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+    }
+    copyStatusEl.textContent = 'Copied';
+    window.setTimeout(() => { copyStatusEl.textContent = ''; }, 1800);
   }
 
   function buildGitHubNewFileUrl(path) {
@@ -129,18 +198,20 @@
 
   async function run() {
     const params = new URLSearchParams(window.location.search);
-    const artifactUrl = params.get('artifact_url');
+    const artifactUrl = params.get("artifact_url");
 
     if (!artifactUrl) {
-      setStatus('Missing required query parameter: artifact_url', 'error');
+      setStatus("Missing artifact_url", "This page is normally opened from HammerDB using Share with TPC-OSS. Open it with ?artifact_url=<encoded HammerDB summaryjson URL> to preview a result artifact.", "error");
       return;
     }
 
+    artifactDetailsEl.hidden = false;
     artifactUrlEl.textContent = artifactUrl;
+    setStatus("Loading artifact", "Fetching and validating the HammerDB JSON artifact…", "");
 
     let response;
     try {
-      response = await fetch(artifactUrl, { headers: { 'Accept': 'application/json' } });
+      response = await fetch(artifactUrl, { headers: { "Accept": "application/json" } });
     } catch (err) {
       showLoadError(artifactUrl);
       return;
@@ -167,13 +238,10 @@
 
     const job = artifact.job || {};
     const result = artifact.result || {};
-
-    const required = ['jobid', 'benchmark', 'database', 'database_display', 'timestamp', 'hdb_version'];
-    const missing = required.filter((k) => !job[k]);
+    const required = ["jobid", "benchmark", "database", "database_display", "timestamp", "hdb_version"];
+    const missing = required.filter((field) => !job[field]);
     if (missing.length > 0) {
-      setStatus('Missing required job fields: ' + missing.join(', '), 'error');
-      clearPreview();
-      required.forEach((k) => addRow('job.' + k, job[k]));
+      showMissingFields(job, required, missing);
       return;
     }
 
