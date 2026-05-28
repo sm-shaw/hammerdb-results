@@ -3,112 +3,286 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Submit a HammerDB result artifact</title>
+  <title>Submit HammerDB Result Artifact</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; line-height: 1.35; }
-    .callout { background: #eef5ff; border: 1px solid #b9d2ff; padding: 0.75rem; margin: 1rem 0; }
-    .note { background: #fff4cc; border: 1px solid #e5c76b; padding: 0.75rem; margin: 1rem 0; }
-    .error { background: #ffecec; border: 1px solid #e09b9b; padding: 0.75rem; margin: 1rem 0; color: #8a1f1f; }
-    .success { background: #ecffef; border: 1px solid #9ed8a9; padding: 0.75rem; margin: 1rem 0; }
-    dl { display: grid; grid-template-columns: 220px 1fr; gap: 0.35rem 0.75rem; }
-    dt { font-weight: bold; }
-    pre { white-space: pre-wrap; word-break: break-word; background: #f6f6f6; border: 1px solid #ddd; padding: 0.75rem; }
-    code { background: #f6f6f6; padding: 0.1rem 0.25rem; }
-    button[disabled] { opacity: 0.6; cursor: not-allowed; }
+    :root{--bg:#f4f7ff;--card:#fff;--line:#dbe4f0;--text:#0f172a;--muted:#64748b;--blue:#2563eb;--navy:#08112f;--navy2:#12275f;--good:#15803d;--good-bg:#f0fdf4;--good-line:#bbf7d0;--warn:#b45309;--warn-bg:#fff7ed;--warn-line:#fdba74;--err:#be123c;--err-bg:#fff1f2;--err-line:#fecdd3;--info:#1d4ed8;--info-bg:#eff6ff;--info-line:#bfdbfe}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--text);line-height:1.5}
+    .wrap{max-width:1120px;margin:0 auto;padding:0 20px 30px}
+    .hero{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:48px 0 40px;margin-bottom:22px}
+    .hero h1{margin:10px 0 12px;font-size:clamp(2rem,4vw,2.8rem);line-height:1.1}
+    .hero p{max-width:820px;color:#d8e2ff;margin:0}
+    .badges{display:flex;gap:8px;flex-wrap:wrap}.badge{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.26);font-weight:700;font-size:.84rem}
+    .hero-warn{margin-top:18px;padding:12px 14px;border-radius:12px;background:rgba(245,158,11,.16);border:1px solid rgba(245,158,11,.35);color:#ffe7bd;font-weight:600}
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.05);margin-bottom:14px}
+    .card h2,.card h3{margin:0 0 8px}.card p{margin:0 0 12px}.muted{color:var(--muted)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;background:#111827;color:#fff;text-decoration:none;padding:10px 14px;font-weight:800;cursor:pointer;font:inherit;font-size:.94rem}
+    .btn.primary{background:var(--blue)}.btn.secondary{background:#e9efff;color:#1e3a8a}.btn:disabled{opacity:.55;cursor:not-allowed}.star{color:#facc15;font-size:1.05rem;line-height:1}
+    .status{border-radius:14px;padding:14px 16px;margin-bottom:14px;border:1px solid var(--info-line);background:var(--info-bg);color:#1e3a8a}.status h3{margin:0 0 4px}.status p{margin:0}.status.success{border-color:var(--good-line);background:var(--good-bg);color:var(--good)}.status.warning{border-color:var(--warn-line);background:var(--warn-bg);color:var(--warn)}.status.error{border-color:var(--err-line);background:var(--err-bg);color:var(--err)}
+    .summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.summary-item{background:#f8fbff;border:1px solid #e6edf8;border-radius:12px;padding:10px}.summary-item .label{font-size:.76rem;text-transform:uppercase;color:var(--muted);font-weight:800;letter-spacing:.02em}.summary-item .value{font-weight:800;word-break:break-word;margin-top:3px}.summary-item.metric{background:#eef4ff;border-color:#d5e3ff}
+    .path-box,.code-box{background:#0b1020;color:#dbeafe;border-radius:12px;padding:12px;overflow:auto;white-space:pre-wrap;word-break:break-word;border:1px solid #172554;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.88rem}
+    .button-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}.copy-note{color:var(--good);font-weight:800;font-size:.88rem;min-height:1.2em}
+    details{border:1px solid var(--line);border-radius:14px;background:#fff;padding:12px}summary{cursor:pointer;font-weight:800}.details-body{margin-top:12px}.compact{font-size:.9rem}.steps{margin:8px 0 0;padding-left:1.3rem}.steps li{margin:5px 0}.technical{margin-top:10px}.technical code{display:block;background:#f8fbff;border:1px solid #e6edf8;border-radius:10px;padding:10px;white-space:nowrap;overflow:auto;color:#334155}
+    @media(max-width:860px){.grid,.summary{grid-template-columns:1fr}.hero{padding:38px 0 32px}.wrap{padding-left:16px;padding-right:16px}}
   </style>
 </head>
 <body>
-  <h1>Submit a HammerDB result artifact</h1>
+  <header class="hero">
+    <div class="wrap">
+      <div class="badges"><span class="badge">Prototype</span><span class="badge">GitHub Reviewed</span><span class="badge">Unofficial</span></div>
+      <h1>Submit HammerDB Result Artifact</h1>
+      <p>Preview a HammerDB result artifact and submit it to the community results repository.</p>
+      <div class="hero-warn">Community-submitted HammerDB results are unaudited and are not official TPC benchmark results.</div>
+    </div>
+  </header>
 
-  <div class="callout">
-    <strong>First, star the HammerDB project on GitHub:</strong><br>
-    <a href="https://github.com/TPC-Council/HammerDB">https://github.com/TPC-Council/HammerDB</a>
-  </div>
+  <main class="wrap">
+    <section class="grid">
+      <article class="card">
+        <h2>Star HammerDB on GitHub</h2>
+        <p class="muted">Before submitting, please star the HammerDB project on GitHub and help others discover the project.</p>
+        <a id="star-link" class="btn" href="#" target="_blank" rel="noopener"><span class="star">★</span> Star HammerDB</a>
+      </article>
+      <article class="card">
+        <h2>How submission works</h2>
+        <ol class="steps">
+          <li>Star the HammerDB project.</li>
+          <li>Review the artifact preview.</li>
+          <li>Use Copy JSON if you want a manual copy, or let Open GitHub submission copy it for you.</li>
+          <li>Click Open GitHub submission.</li>
+          <li>Sign in to GitHub if prompted.</li>
+          <li>Review the file contents.</li>
+          <li>Commit the change and open the pull request.</li>
+        </ol>
+      </article>
+    </section>
 
-  <div class="note">
-    Prototype only. Intended live publication path: TPC-Council/hammerdb-results, linked from the TPC HammerDB Artifact Results page.
-  </div>
+    <section id="status" class="status" role="status" aria-live="polite"></section>
 
-  <p><strong>Artifact URL:</strong> <code id="artifact-url">(none)</code></p>
+    <section id="artifact-details" class="card" hidden>
+      <h2>Artifact source</h2>
+      <p class="muted compact">The artifact URL was provided by HammerDB.</p>
+      <details class="technical">
+        <summary>Show artifact URL</summary>
+        <code id="artifact-url"></code>
+      </details>
+    </section>
 
-  <div id="status"></div>
+    <section id="preview-card" class="card" hidden>
+      <h2>Artifact preview</h2>
+      <div id="preview" class="summary"></div>
+    </section>
 
-  <h2>Artifact preview</h2>
-  <dl id="preview"></dl>
+    <section id="target-card" class="card" hidden>
+      <h2>Target repository path</h2>
+      <p class="muted">The JSON artifact will be submitted at this computed path.</p>
+      <pre id="target-path" class="path-box"></pre>
+      <div class="button-row"><button id="copy-path" type="button" class="btn secondary">Copy path</button><span id="copy-path-note" class="copy-note" aria-live="polite"></span></div>
+    </section>
 
-  <h3>Computed target repository path</h3>
-  <pre id="target-path">(not available)</pre>
+    <section class="card">
+      <details id="raw-details">
+        <summary>Show raw artifact JSON</summary>
+        <div class="details-body">
+          <pre id="raw-json" class="code-box">Artifact JSON has not loaded yet.</pre>
+          <div class="button-row"><button id="copy-json-raw" type="button" class="btn secondary" disabled>Copy JSON</button><span id="copy-json-raw-note" class="copy-note" aria-live="polite"></span></div>
+        </div>
+      </details>
+    </section>
 
-  <h3>Raw artifact JSON</h3>
-  <pre id="raw-json">(not loaded)</pre>
-
-  <h2>GitHub pull request submission (next iteration)</h2>
-  <button type="button" disabled>Submit artifact pull request</button>
-  <p>GitHub-authenticated pull request creation will be added in the next iteration.</p>
+    <section class="card">
+      <h2>Submit through GitHub</h2>
+      <p class="muted">The artifact JSON will be copied to your clipboard. GitHub will open with the target path pre-filled. Paste the JSON into the editor, commit the change, and open the pull request.</p>
+      <p class="muted"><strong>Large artifact handling:</strong> the JSON is copied to your clipboard and GitHub opens with the target filename pre-filled.</p>
+      <p><strong>Suggested PR/commit note:</strong> <span id="commit-note">Community-submitted HammerDB result artifact.</span></p>
+      <div class="button-row"><button id="copy-json-submit" type="button" class="btn secondary" disabled>Copy JSON</button><button id="open-github" type="button" class="btn primary" disabled>Open GitHub submission</button><span id="copy-json-submit-note" class="copy-note" aria-live="polite"></span></div>
+    </section>
+  </main>
 
 <script>
 (function () {
-  const statusEl = document.getElementById('status');
-  const previewEl = document.getElementById('preview');
-  const rawEl = document.getElementById('raw-json');
-  const targetPathEl = document.getElementById('target-path');
-  const artifactUrlEl = document.getElementById('artifact-url');
+  // Change TARGET_OWNER/TARGET_REPO when the results repository moves under the TPC.
+  const TARGET_OWNER = "sm-shaw";
+  const TARGET_REPO = "hammerdb-results";
+  const TARGET_BRANCH = "master";
+  const HAMMERDB_PROJECT_URL = "https://github.com/TPC-Council/HammerDB";
 
-  function setStatus(message, kind) {
-    statusEl.className = kind;
-    statusEl.textContent = message;
+  const statusEl = document.getElementById("status");
+  const artifactDetailsEl = document.getElementById("artifact-details");
+  const artifactUrlEl = document.getElementById("artifact-url");
+  const previewCardEl = document.getElementById("preview-card");
+  const previewEl = document.getElementById("preview");
+  const targetCardEl = document.getElementById("target-card");
+  const targetPathEl = document.getElementById("target-path");
+  const rawEl = document.getElementById("raw-json");
+  const copyPathButton = document.getElementById("copy-path");
+  const copyJsonRawButton = document.getElementById("copy-json-raw");
+  const copyJsonSubmitButton = document.getElementById("copy-json-submit");
+  const copyPathNote = document.getElementById("copy-path-note");
+  const copyJsonRawNote = document.getElementById("copy-json-raw-note");
+  const copyJsonSubmitNote = document.getElementById("copy-json-submit-note");
+  const openGithubButton = document.getElementById("open-github");
+  const starLinkEl = document.getElementById("star-link");
+
+  let targetPath = "";
+  let rawJson = "";
+  let githubUrl = "";
+
+  starLinkEl.href = HAMMERDB_PROJECT_URL;
+
+  function setStatus(title, message, kind) {
+    statusEl.className = "status" + (kind ? " " + kind : "");
+    statusEl.replaceChildren();
+    const heading = document.createElement("h3");
+    heading.textContent = title;
+    const body = document.createElement("p");
+    body.textContent = message;
+    statusEl.append(heading, body);
+  }
+
+  function clearPreview() {
+    previewEl.replaceChildren();
+  }
+
+  function addPreviewItem(label, value, isMetric) {
+    const item = document.createElement("div");
+    item.className = "summary-item" + (isMetric ? " metric" : "");
+    const key = document.createElement("div");
+    key.className = "label";
+    key.textContent = label;
+    const val = document.createElement("div");
+    val.className = "value";
+    val.textContent = value == null || value === "" ? "—" : String(value);
+    item.append(key, val);
+    previewEl.appendChild(item);
   }
 
   function slugify(value) {
-    return String(value || '')
+    return String(value || "")
       .trim()
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
   }
 
   function parseTimestampParts(timestamp) {
     if (!timestamp) return null;
-    const normalized = String(timestamp).replace('T', ' ');
-    const m = normalized.match(/^(\d{4})-(\d{2})-(\d{2})\s/);
-    if (!m) return null;
-    return { year: m[1], month: m[2] };
+    const normalized = String(timestamp).replace("T", " ");
+    const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})(?:\s|$)/);
+    if (!match) return null;
+    return { year: match[1], month: match[2] };
   }
 
-  function addRow(name, value) {
-    const dt = document.createElement('dt');
-    dt.textContent = name;
-    const dd = document.createElement('dd');
-    dd.textContent = value == null || value === '' ? '(missing)' : String(value);
-    previewEl.appendChild(dt);
-    previewEl.appendChild(dd);
+  function formatNumber(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return value;
+    return number.toLocaleString();
   }
 
-  function clearPreview() {
-    previewEl.innerHTML = '';
+  function buildGithubUrl(path, jobid) {
+    const message = "Add HammerDB result artifact " + jobid;
+    const baseUrl = "https://github.com/" + TARGET_OWNER + "/" + TARGET_REPO + "/new/" + TARGET_BRANCH;
+    const filenameParam = "filename=" + encodeURIComponent(path);
+    const messageParam = "message=" + encodeURIComponent(message);
+    return baseUrl + "?" + filenameParam + "&" + messageParam;
+  }
+
+  async function copyText(text, noteEl) {
+    if (!text) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      const copied = document.execCommand("copy");
+      textarea.remove();
+      if (!copied) {
+        throw new Error("Copy command was not successful");
+      }
+    }
+    noteEl.textContent = "Copied";
+    window.setTimeout(() => { noteEl.textContent = ""; }, 1800);
+  }
+
+  function showRawJson(text) {
+    rawJson = text;
+    rawEl.textContent = text || "Artifact JSON has not loaded yet.";
+    copyJsonRawButton.disabled = !text;
+    copyJsonSubmitButton.disabled = !text;
+  }
+
+  function showMissingFields(job, required, missing) {
+    clearPreview();
+    required.forEach((field) => addPreviewItem(field.replace(/_/g, " "), job[field], false));
+    previewCardEl.hidden = false;
+    setStatus("Missing required fields", "The artifact is missing required job fields: " + missing.join(", ") + ".", "error");
+  }
+
+  function prepareSubmission(job, result, artifact) {
+    clearPreview();
+    addPreviewItem("Job ID", job.jobid, false);
+    addPreviewItem("Benchmark", job.benchmark, false);
+    addPreviewItem("Database", job.database_display || job.database, false);
+    addPreviewItem("Release", job.release, false);
+    addPreviewItem("Timestamp", job.timestamp, false);
+    addPreviewItem("HammerDB version", job.hdb_version, false);
+
+    if (job.benchmark === "TPROC-C") {
+      addPreviewItem("NOPM", formatNumber(result.nopm), true);
+      addPreviewItem("TPM", formatNumber(result.tpm), true);
+    } else if (job.benchmark === "TPROC-H") {
+      addPreviewItem("Geomean seconds", formatNumber(result.geomean_seconds), true);
+      addPreviewItem("Total query time seconds", formatNumber(result.total_query_time_seconds), true);
+    }
+
+    const timestampParts = parseTimestampParts(job.timestamp);
+    if (!timestampParts) {
+      previewCardEl.hidden = false;
+      setStatus("Invalid timestamp", "The artifact timestamp must start with YYYY-MM-DD so the target path can be computed.", "error");
+      return;
+    }
+
+    const benchmarkSlug = slugify(job.benchmark);
+    const databaseSlug = slugify(job.database_display);
+    targetPath = "results/" + benchmarkSlug + "/" + databaseSlug + "/" + timestampParts.year + "/" + timestampParts.month + "/" + job.jobid + ".json";
+    targetPathEl.textContent = targetPath;
+    targetCardEl.hidden = false;
+    previewCardEl.hidden = false;
+
+    githubUrl = buildGithubUrl(targetPath, job.jobid);
+    openGithubButton.disabled = false;
+
+    setStatus("Artifact loaded and ready", "Preview, validation, target path, and GitHub submission link are ready.", "success");
   }
 
   async function run() {
     const params = new URLSearchParams(window.location.search);
-    const artifactUrl = params.get('artifact_url');
+    const artifactUrl = params.get("artifact_url");
 
     if (!artifactUrl) {
-      setStatus('Missing required query parameter: artifact_url', 'error');
+      setStatus("Missing artifact_url", "This page is normally opened from HammerDB using Share with TPC-OSS. Open it with ?artifact_url=<encoded HammerDB summaryjson URL> to preview a result artifact.", "error");
       return;
     }
 
+    artifactDetailsEl.hidden = false;
     artifactUrlEl.textContent = artifactUrl;
+    setStatus("Loading artifact", "Fetching and validating the HammerDB JSON artifact…", "");
 
     let response;
     try {
-      response = await fetch(artifactUrl, { headers: { 'Accept': 'application/json' } });
+      response = await fetch(artifactUrl, { headers: { "Accept": "application/json" } });
     } catch (err) {
-      setStatus('Failed to fetch artifact_url. Check network access and URL validity.', 'error');
+      setStatus("Fetch failed", "Failed to fetch artifact_url. Check network access and URL validity.", "error");
       return;
     }
 
     if (!response.ok) {
-      setStatus('Failed to fetch artifact_url. HTTP status: ' + response.status, 'error');
+      setStatus("Fetch failed", "Failed to fetch artifact_url. HTTP status: " + response.status + ".", "error");
       return;
     }
 
@@ -117,57 +291,44 @@
     try {
       artifact = JSON.parse(rawText);
     } catch (err) {
-      setStatus('Fetched content is not valid JSON.', 'error');
-      rawEl.textContent = rawText;
+      showRawJson(rawText);
+      setStatus("Invalid JSON", "Fetched content is not valid JSON. The raw response is available below for troubleshooting.", "error");
       return;
     }
 
-    rawEl.textContent = JSON.stringify(artifact, null, 2);
+    showRawJson(JSON.stringify(artifact, null, 2));
 
     const job = artifact.job || {};
     const result = artifact.result || {};
-
-    const required = ['jobid', 'benchmark', 'database', 'database_display', 'timestamp', 'hdb_version'];
-    const missing = required.filter((k) => !job[k]);
+    const required = ["jobid", "benchmark", "database", "database_display", "timestamp", "hdb_version"];
+    const missing = required.filter((field) => !job[field]);
     if (missing.length > 0) {
-      setStatus('Missing required job fields: ' + missing.join(', '), 'error');
-      clearPreview();
-      required.forEach((k) => addRow('job.' + k, job[k]));
+      showMissingFields(job, required, missing);
       return;
     }
 
-    clearPreview();
-    addRow('job.jobid', job.jobid);
-    addRow('job.benchmark', job.benchmark);
-    addRow('job.database', job.database);
-    addRow('job.database_display', job.database_display);
-    addRow('job.release', job.release);
-    addRow('job.timestamp', job.timestamp);
-    addRow('job.hdb_version', job.hdb_version);
-
-    if (job.benchmark === 'TPROC-C') {
-      addRow('result.nopm', result.nopm);
-      addRow('result.tpm', result.tpm);
-    } else if (job.benchmark === 'TPROC-H') {
-      addRow('result.geomean_seconds', result.geomean_seconds);
-      addRow('result.total_query_time_seconds', result.total_query_time_seconds);
-    } else {
-      addRow('result.note', 'Unknown benchmark; showing generic result values only.');
-    }
-
-    const timestampParts = parseTimestampParts(job.timestamp);
-    if (!timestampParts) {
-      setStatus('Missing required fields for path computation: timestamp format invalid (expected YYYY-MM-DD ...).', 'error');
-      return;
-    }
-
-    const benchmarkSlug = slugify(job.benchmark);
-    const databaseSlug = slugify(job.database_display);
-    const targetPath = `results/${benchmarkSlug}/${databaseSlug}/${timestampParts.year}/${timestampParts.month}/${job.jobid}.json`;
-    targetPathEl.textContent = targetPath;
-
-    setStatus('Artifact loaded successfully. Preview and target path are ready.', 'success');
+    prepareSubmission(job, result, artifact);
   }
+
+  copyPathButton.addEventListener("click", () => {
+    copyText(targetPath, copyPathNote).catch(() => setStatus("Clipboard copy failed", "Clipboard copy failed. Select and copy the target path manually.", "warning"));
+  });
+  copyJsonRawButton.addEventListener("click", () => {
+    copyText(rawJson, copyJsonRawNote).catch(() => setStatus("Clipboard copy failed", "Clipboard copy failed. Select and copy the raw JSON manually.", "warning"));
+  });
+  copyJsonSubmitButton.addEventListener("click", () => {
+    copyText(rawJson, copyJsonSubmitNote).catch(() => setStatus("Clipboard copy failed", "Clipboard copy failed. Select and copy the raw JSON manually.", "warning"));
+  });
+  openGithubButton.addEventListener("click", async () => {
+    if (!githubUrl || !rawJson) return;
+    try {
+      await copyText(rawJson, copyJsonSubmitNote);
+      setStatus("Artifact JSON copied", "The artifact JSON has been copied to your clipboard. Paste it into the GitHub editor, then commit the change and open the pull request.", "success");
+      window.open(githubUrl, "_blank", "noopener");
+    } catch (err) {
+      setStatus("Clipboard copy failed", "Clipboard copy failed. Click Copy JSON, then open GitHub submission.", "warning");
+    }
+  });
 
   run();
 })();
