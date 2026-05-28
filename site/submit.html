@@ -22,7 +22,7 @@
     .summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.summary-item{background:#f8fbff;border:1px solid #e6edf8;border-radius:12px;padding:10px}.summary-item .label{font-size:.76rem;text-transform:uppercase;color:var(--muted);font-weight:800;letter-spacing:.02em}.summary-item .value{font-weight:800;word-break:break-word;margin-top:3px}.summary-item.metric{background:#eef4ff;border-color:#d5e3ff}
     .path-box,.code-box{background:#0b1020;color:#dbeafe;border-radius:12px;padding:12px;overflow:auto;white-space:pre-wrap;word-break:break-word;border:1px solid #172554;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.88rem}
     .button-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}.copy-note{color:var(--good);font-weight:800;font-size:.88rem;min-height:1.2em}
-    details{border:1px solid var(--line);border-radius:14px;background:#fff;padding:12px}summary{cursor:pointer;font-weight:800}.details-body{margin-top:12px}.compact{font-size:.9rem}.steps{margin:8px 0 0;padding-left:1.3rem}.steps li{margin:5px 0}.technical{margin-top:10px}.technical code{display:block;background:#f8fbff;border:1px solid #e6edf8;border-radius:10px;padding:10px;white-space:nowrap;overflow:auto;color:#334155}
+    details{border:1px solid var(--line);border-radius:14px;background:#fff;padding:12px}summary{cursor:pointer;font-weight:800}.details-body{margin-top:12px}.compact{font-size:.9rem}.steps{margin:8px 0 0;padding-left:1.3rem}.steps li{margin:5px 0}.technical{margin-top:10px}.technical code{display:block;background:#f8fbff;border:1px solid #e6edf8;border-radius:10px;padding:10px;white-space:nowrap;overflow:auto;color:#334155}.contract-flow{margin:8px 0 0;padding-left:1.3rem}.contract-flow li{margin:4px 0}.security-note{margin-top:10px;padding:10px 12px;border-radius:10px;background:#f8fbff;border:1px solid #e6edf8;color:#334155;font-weight:600}
     @media(max-width:860px){.grid,.summary{grid-template-columns:1fr}.hero{padding:38px 0 32px}.wrap{padding-left:16px;padding-right:16px}}
   </style>
 </head>
@@ -48,11 +48,10 @@
         <ol class="steps">
           <li>Star the HammerDB project.</li>
           <li>Review the artifact preview.</li>
-          <li>Use Copy JSON if you want a manual copy, or let Open GitHub submission copy it for you.</li>
-          <li>Click Open GitHub submission.</li>
-          <li>Sign in to GitHub if prompted.</li>
-          <li>Review the file contents.</li>
-          <li>Commit the change and open the pull request.</li>
+          <li>Confirm the computed target path.</li>
+          <li>Click Create pull request.</li>
+          <li>The authenticated submission service creates the branch, commit, and pull request.</li>
+          <li>Review the pull request after the page redirects.</li>
         </ol>
       </article>
     </section>
@@ -90,24 +89,44 @@
       </details>
     </section>
 
+    <section id="service-status" class="status warning" hidden></section>
+
     <section class="card">
-      <h2>Submit through GitHub</h2>
-      <p class="muted">The artifact JSON will be copied to your clipboard. GitHub will open with the target path pre-filled. Paste the JSON into the editor, commit the change, and open the pull request.</p>
-      <p class="muted"><strong>Large artifact handling:</strong> the JSON is copied to your clipboard and GitHub opens with the target filename pre-filled.</p>
+      <h2>Create pull request</h2>
+      <p class="muted">This submits the validated artifact to the HammerDB results submission service. The service creates a branch, commits the JSON artifact at the computed path, opens a GitHub pull request for review, and returns the PR URL.</p>
+      <p class="muted">Copy path and Copy JSON are diagnostic/admin fallback actions, not the normal submission workflow.</p>
       <p><strong>Suggested PR/commit note:</strong> <span id="commit-note">Community-submitted HammerDB result artifact.</span></p>
-      <div class="button-row"><button id="copy-json-submit" type="button" class="btn secondary" disabled>Copy JSON</button><button id="open-github" type="button" class="btn primary" disabled>Open GitHub submission</button><span id="copy-json-submit-note" class="copy-note" aria-live="polite"></span></div>
+      <div class="button-row"><button id="copy-json-submit" type="button" class="btn secondary" disabled>Copy JSON</button><button id="create-pr" type="button" class="btn primary" disabled>Create pull request</button><span id="copy-json-submit-note" class="copy-note" aria-live="polite"></span></div>
+    </section>
+
+    <section class="card">
+      <h2>Submission service contract</h2>
+      <p class="muted">The authenticated submission service must create a branch, commit the artifact JSON at the computed path, open a pull request against <span id="target-branch-label">TARGET_BRANCH</span>, and return the PR URL.</p>
+      <ol class="contract-flow">
+        <li>Validate artifact JSON</li>
+        <li>Create branch submit/&lt;database&gt;/&lt;jobid&gt;</li>
+        <li>Commit file at target path</li>
+        <li>Open pull request to <span id="target-branch-flow">TARGET_BRANCH</span></li>
+        <li>Return PR URL</li>
+        <li>GitHub Actions rebuilds leaderboard after merge</li>
+      </ol>
+      <div class="security-note">GitHub tokens must stay server-side. The browser must not contain GitHub tokens or secrets.</div>
     </section>
   </main>
 
 <script>
 (function () {
-  // Change TARGET_OWNER/TARGET_REPO when the results repository moves under the TPC.
+  // Prototype uses sm-shaw/hammerdb-results.
+  // When the workflow moves under the TPC, change TARGET_OWNER/TARGET_REPO/SUBMIT_ENDPOINT.
+  // SUBMIT_ENDPOINT is the authenticated service that creates the branch, commit and pull request.
   const TARGET_OWNER = "sm-shaw";
   const TARGET_REPO = "hammerdb-results";
   const TARGET_BRANCH = "master";
   const HAMMERDB_PROJECT_URL = "https://github.com/TPC-Council/HammerDB";
+  const SUBMIT_ENDPOINT = "";
 
   const statusEl = document.getElementById("status");
+  const serviceStatusEl = document.getElementById("service-status");
   const artifactDetailsEl = document.getElementById("artifact-details");
   const artifactUrlEl = document.getElementById("artifact-url");
   const previewCardEl = document.getElementById("preview-card");
@@ -121,14 +140,20 @@
   const copyPathNote = document.getElementById("copy-path-note");
   const copyJsonRawNote = document.getElementById("copy-json-raw-note");
   const copyJsonSubmitNote = document.getElementById("copy-json-submit-note");
-  const openGithubButton = document.getElementById("open-github");
+  const createPrButton = document.getElementById("create-pr");
   const starLinkEl = document.getElementById("star-link");
+  const targetBranchLabelEl = document.getElementById("target-branch-label");
+  const targetBranchFlowEl = document.getElementById("target-branch-flow");
 
   let targetPath = "";
   let rawJson = "";
-  let githubUrl = "";
+  let currentArtifact = null;
+  let currentJobId = "";
+  let submitting = false;
 
   starLinkEl.href = HAMMERDB_PROJECT_URL;
+  targetBranchLabelEl.textContent = TARGET_BRANCH;
+  targetBranchFlowEl.textContent = TARGET_BRANCH;
 
   function setStatus(title, message, kind) {
     statusEl.className = "status" + (kind ? " " + kind : "");
@@ -138,6 +163,17 @@
     const body = document.createElement("p");
     body.textContent = message;
     statusEl.append(heading, body);
+  }
+
+  function setServiceStatus(title, message, kind) {
+    serviceStatusEl.className = "status" + (kind ? " " + kind : "");
+    serviceStatusEl.replaceChildren();
+    const heading = document.createElement("h3");
+    heading.textContent = title;
+    const body = document.createElement("p");
+    body.textContent = message;
+    serviceStatusEl.append(heading, body);
+    serviceStatusEl.hidden = false;
   }
 
   function clearPreview() {
@@ -179,12 +215,19 @@
     return number.toLocaleString();
   }
 
-  function buildGithubUrl(path, jobid) {
-    const message = "Add HammerDB result artifact " + jobid;
-    const baseUrl = "https://github.com/" + TARGET_OWNER + "/" + TARGET_REPO + "/new/" + TARGET_BRANCH;
-    const filenameParam = "filename=" + encodeURIComponent(path);
-    const messageParam = "message=" + encodeURIComponent(message);
-    return baseUrl + "?" + filenameParam + "&" + messageParam;
+  function buildSubmissionPayload() {
+    const message = "Add HammerDB result artifact " + currentJobId;
+    return {
+      target_owner: TARGET_OWNER,
+      target_repo: TARGET_REPO,
+      target_branch: TARGET_BRANCH,
+      target_path: targetPath,
+      artifact: currentArtifact,
+      artifact_json: rawJson,
+      commit_message: message,
+      pr_title: message,
+      pr_body: "Community-submitted HammerDB result artifact."
+    };
   }
 
   async function copyText(text, noteEl) {
@@ -223,6 +266,22 @@
     setStatus("Missing required fields", "The artifact is missing required job fields: " + missing.join(", ") + ".", "error");
   }
 
+  function configureSubmissionButton() {
+    if (!targetPath || !currentArtifact) {
+      createPrButton.disabled = true;
+      return;
+    }
+
+    if (!SUBMIT_ENDPOINT) {
+      createPrButton.disabled = true;
+      setServiceStatus("Submission service not configured", "This artifact is validated and ready, but automatic pull request creation requires the authenticated HammerDB results submission service. Configure SUBMIT_ENDPOINT to enable one-click PR creation.", "warning");
+      return;
+    }
+
+    serviceStatusEl.hidden = true;
+    createPrButton.disabled = false;
+  }
+
   function prepareSubmission(job, result, artifact) {
     clearPreview();
     addPreviewItem("Job ID", job.jobid, false);
@@ -250,14 +309,59 @@
     const benchmarkSlug = slugify(job.benchmark);
     const databaseSlug = slugify(job.database_display);
     targetPath = "results/" + benchmarkSlug + "/" + databaseSlug + "/" + timestampParts.year + "/" + timestampParts.month + "/" + job.jobid + ".json";
+    currentArtifact = artifact;
+    currentJobId = job.jobid;
     targetPathEl.textContent = targetPath;
     targetCardEl.hidden = false;
     previewCardEl.hidden = false;
 
-    githubUrl = buildGithubUrl(targetPath, job.jobid);
-    openGithubButton.disabled = false;
+    configureSubmissionButton();
+    setStatus("Artifact loaded and ready", "Preview, validation, and target path are ready.", "success");
+  }
 
-    setStatus("Artifact loaded and ready", "Preview, validation, target path, and GitHub submission link are ready.", "success");
+  async function createPullRequest() {
+    if (!SUBMIT_ENDPOINT || !targetPath || !currentArtifact || submitting) return;
+    submitting = true;
+    createPrButton.disabled = true;
+    setStatus("Creating pull request", "Submitting the validated artifact to the HammerDB results submission service…", "");
+
+    let response;
+    try {
+      response = await fetch(SUBMIT_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(buildSubmissionPayload())
+      });
+    } catch (err) {
+      submitting = false;
+      configureSubmissionButton();
+      setStatus("Submission service request failed", "Submission service request failed.", "error");
+      return;
+    }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (err) {
+      data = { ok: false, error: "Submission service returned an invalid response." };
+    }
+
+    if (!response.ok || !data.ok) {
+      submitting = false;
+      configureSubmissionButton();
+      setStatus("Pull request creation failed", data.error || "The submission service could not create the pull request.", "error");
+      return;
+    }
+
+    if (!data.pr_url) {
+      submitting = false;
+      configureSubmissionButton();
+      setStatus("Pull request creation failed", "The submission service did not return a PR URL.", "error");
+      return;
+    }
+
+    setStatus("Pull request created", "Pull request created. Opening PR for review.", "success");
+    window.location.href = data.pr_url;
   }
 
   async function run() {
@@ -311,24 +415,15 @@
   }
 
   copyPathButton.addEventListener("click", () => {
-    copyText(targetPath, copyPathNote).catch(() => setStatus("Clipboard copy failed", "Clipboard copy failed. Select and copy the target path manually.", "warning"));
+    copyText(targetPath, copyPathNote).catch(() => setStatus("Clipboard copy failed", "Clipboard copy failed. Use the diagnostic target path details if needed.", "warning"));
   });
   copyJsonRawButton.addEventListener("click", () => {
-    copyText(rawJson, copyJsonRawNote).catch(() => setStatus("Clipboard copy failed", "Clipboard copy failed. Select and copy the raw JSON manually.", "warning"));
+    copyText(rawJson, copyJsonRawNote).catch(() => setStatus("Clipboard copy failed", "Clipboard copy failed. Use the diagnostic raw JSON details if needed.", "warning"));
   });
   copyJsonSubmitButton.addEventListener("click", () => {
-    copyText(rawJson, copyJsonSubmitNote).catch(() => setStatus("Clipboard copy failed", "Clipboard copy failed. Select and copy the raw JSON manually.", "warning"));
+    copyText(rawJson, copyJsonSubmitNote).catch(() => setStatus("Clipboard copy failed", "Clipboard copy failed. Use the diagnostic raw JSON details if needed.", "warning"));
   });
-  openGithubButton.addEventListener("click", async () => {
-    if (!githubUrl || !rawJson) return;
-    try {
-      await copyText(rawJson, copyJsonSubmitNote);
-      setStatus("Artifact JSON copied", "The artifact JSON has been copied to your clipboard. Paste it into the GitHub editor, then commit the change and open the pull request.", "success");
-      window.open(githubUrl, "_blank", "noopener");
-    } catch (err) {
-      setStatus("Clipboard copy failed", "Clipboard copy failed. Click Copy JSON, then open GitHub submission.", "warning");
-    }
-  });
+  createPrButton.addEventListener("click", createPullRequest);
 
   run();
 })();
