@@ -27,35 +27,17 @@
   </style>
 </head>
 <body>
-  <header class="hero">
-    <div class="wrap">
-      <div class="badges"><span class="badge">Prototype</span><span class="badge">GitHub Reviewed</span><span class="badge">Unofficial</span></div>
-      <h1>Submit HammerDB Result Artifact</h1>
-      <p>Preview a HammerDB result artifact and submit it to the community results repository.</p>
-      <div class="hero-warn">Community-submitted HammerDB results are unaudited and are not official TPC benchmark results.</div>
-    </div>
-  </header>
+  <h1>Submit HammerDB Result Artifact</h1>
 
-  <main class="wrap">
-    <section class="grid">
-      <article class="card">
-        <h2>Star HammerDB on GitHub</h2>
-        <p class="muted">Before submitting, please star the HammerDB project on GitHub and help others discover the project.</p>
-        <a id="star-link" class="btn" href="#" target="_blank" rel="noopener"><span class="star">★</span> Star HammerDB</a>
-      </article>
-      <article class="card">
-        <h2>How submission works</h2>
-        <ol class="steps">
-          <li>Star the HammerDB project.</li>
-          <li>Review the artifact preview.</li>
-          <li>Confirm the computed target path.</li>
-          <li>Click Create pull request.</li>
-          <li>Review the pull request after the page redirects to GitHub.</li>
-        </ol>
-      </article>
-    </section>
+  <div class="callout">
+    <strong>Star HammerDB on GitHub</strong><br>
+    Before submitting, please star the HammerDB project on GitHub and help others discover the project.<br>
+    <a id="star-link" href="https://github.com/TPC-Council/HammerDB">★ Star HammerDB</a>
+  </div>
 
-    <section id="status" class="status" role="status" aria-live="polite"></section>
+  <div class="note">
+    Workflow: copy the artifact JSON, open GitHub to create the result file, paste the JSON into the new file, then use GitHub to propose the change and open the pull request. If you do not have write access, GitHub will guide you through the fork and propose-changes flow.
+  </div>
 
     <section id="artifact-details" class="card" hidden>
       <h2>Artifact source</h2>
@@ -88,71 +70,39 @@
       </details>
     </section>
 
-    <section class="card">
-      <h2>Create pull request</h2>
-      <p class="muted">Create a GitHub pull request with this validated HammerDB artifact committed at the computed repository path.</p>
-      <p><strong>Suggested PR/commit note:</strong> <span id="commit-note">Community-submitted HammerDB result artifact.</span></p>
-      <div class="button-row"><button id="create-pr" type="button" class="btn primary" disabled>Create pull request</button></div>
-    </section>
-  </main>
+  <h3>Raw artifact JSON</h3>
+  <pre id="raw-json">(not loaded)</pre>
+
+  <h2>Create pull request</h2>
+  <button id="copy-json" type="button" disabled>Copy artifact JSON</button>
+  <button id="create-pr" type="button" disabled>Create pull request</button>
+  <span id="copy-status" aria-live="polite"></span>
 
 <script>
 (function () {
-  const TARGET_OWNER = "sm-shaw";
-  const TARGET_REPO = "hammerdb-results";
-  const TARGET_BRANCH = "master";
-  const HAMMERDB_PROJECT_URL = "https://github.com/TPC-Council/HammerDB";
-  const SUBMIT_ENDPOINT = "/api/hammerdb-results/submit";
+  const TARGET_OWNER = 'sm-shaw';
+  const TARGET_REPO = 'hammerdb-results';
+  const TARGET_BRANCH = 'master';
+  const HAMMERDB_PROJECT_URL = 'https://github.com/TPC-Council/HammerDB';
 
-  const statusEl = document.getElementById("status");
-  const artifactDetailsEl = document.getElementById("artifact-details");
-  const artifactUrlEl = document.getElementById("artifact-url");
-  const previewCardEl = document.getElementById("preview-card");
-  const previewEl = document.getElementById("preview");
-  const targetCardEl = document.getElementById("target-card");
-  const targetPathEl = document.getElementById("target-path");
-  const rawEl = document.getElementById("raw-json");
-  const copyPathButton = document.getElementById("copy-path");
-  const copyJsonRawButton = document.getElementById("copy-json-raw");
-  const copyPathNote = document.getElementById("copy-path-note");
-  const copyJsonRawNote = document.getElementById("copy-json-raw-note");
-  const createPrButton = document.getElementById("create-pr");
-  const starLinkEl = document.getElementById("star-link");
+  const statusEl = document.getElementById('status');
+  const previewEl = document.getElementById('preview');
+  const rawEl = document.getElementById('raw-json');
+  const targetPathEl = document.getElementById('target-path');
+  const artifactUrlEl = document.getElementById('artifact-url');
+  const copyJsonButton = document.getElementById('copy-json');
+  const createPrButton = document.getElementById('create-pr');
+  const copyStatusEl = document.getElementById('copy-status');
+  const starLinkEl = document.getElementById('star-link');
 
-  let targetPath = "";
-  let rawJson = "";
-  let currentArtifact = null;
-  let currentJobId = "";
-  let currentDatabaseSlug = "";
-  let submitting = false;
+  let rawJson = '';
+  let targetPath = '';
 
   starLinkEl.href = HAMMERDB_PROJECT_URL;
 
-  function setStatus(title, message, kind) {
-    statusEl.className = "status" + (kind ? " " + kind : "");
-    statusEl.replaceChildren();
-    const heading = document.createElement("h3");
-    heading.textContent = title;
-    const body = document.createElement("p");
-    body.textContent = message;
-    statusEl.append(heading, body);
-  }
-
-  function clearPreview() {
-    previewEl.replaceChildren();
-  }
-
-  function addPreviewItem(label, value, isMetric) {
-    const item = document.createElement("div");
-    item.className = "summary-item" + (isMetric ? " metric" : "");
-    const key = document.createElement("div");
-    key.className = "label";
-    key.textContent = label;
-    const val = document.createElement("div");
-    val.className = "value";
-    val.textContent = value == null || value === "" ? "—" : String(value);
-    item.append(key, val);
-    previewEl.appendChild(item);
+  function setStatus(message, kind) {
+    statusEl.className = kind;
+    statusEl.textContent = message;
   }
 
   function slugify(value) {
@@ -315,6 +265,29 @@
     window.location.href = data.pr_url;
   }
 
+  function buildGitHubNewFileUrl(path) {
+    return `https://github.com/${TARGET_OWNER}/${TARGET_REPO}/new/${TARGET_BRANCH}?filename=${encodeURIComponent(path)}`;
+  }
+
+  async function copyText(text) {
+    if (!text) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+    }
+    copyStatusEl.textContent = 'Copied';
+    window.setTimeout(() => { copyStatusEl.textContent = ''; }, 1800);
+  }
+
   async function run() {
     const params = new URLSearchParams(window.location.search);
     const artifactUrl = params.get("artifact_url");
@@ -351,7 +324,9 @@
       return;
     }
 
-    showRawJson(JSON.stringify(artifact, null, 2));
+    rawJson = JSON.stringify(artifact, null, 2);
+    rawEl.textContent = rawJson;
+    copyJsonButton.disabled = false;
 
     const job = artifact.job || {};
     const result = artifact.result || {};
@@ -362,16 +337,50 @@
       return;
     }
 
-    prepareSubmission(job, result, artifact);
+    clearPreview();
+    addRow('Job ID', job.jobid);
+    addRow('Benchmark', job.benchmark);
+    addRow('Database', job.database_display || job.database);
+    addRow('Release', job.release);
+    addRow('Timestamp', job.timestamp);
+    addRow('HammerDB version', job.hdb_version);
+
+    if (job.benchmark === 'TPROC-C') {
+      addRow('NOPM', result.nopm);
+      addRow('TPM', result.tpm);
+    } else if (job.benchmark === 'TPROC-H') {
+      addRow('Geomean seconds', result.geomean_seconds);
+      addRow('Total query time seconds', result.total_query_time_seconds);
+    } else {
+      addRow('result.note', 'Unknown benchmark; showing generic result values only.');
+    }
+
+    const timestampParts = parseTimestampParts(job.timestamp);
+    if (!timestampParts) {
+      setStatus('Missing required fields for path computation: timestamp format invalid (expected YYYY-MM-DD ...).', 'error');
+      return;
+    }
+
+    const benchmarkSlug = slugify(job.benchmark);
+    const databaseSlug = slugify(job.database_display);
+    targetPath = `results/${benchmarkSlug}/${databaseSlug}/${timestampParts.year}/${timestampParts.month}/${job.jobid}.json`;
+    targetPathEl.textContent = targetPath;
+    createPrButton.disabled = false;
+
+    setStatus('Artifact loaded successfully. Preview and target path are ready.', 'success');
   }
 
-  copyPathButton.addEventListener("click", () => {
-    copyText(targetPath, copyPathNote).catch(() => setStatus("Clipboard copy failed", "Clipboard copy failed. Use the target path details if needed.", "warning"));
+  copyJsonButton.addEventListener('click', () => {
+    copyText(rawJson).catch(() => {
+      copyStatusEl.textContent = 'Copy failed';
+    });
   });
-  copyJsonRawButton.addEventListener("click", () => {
-    copyText(rawJson, copyJsonRawNote).catch(() => setStatus("Clipboard copy failed", "Clipboard copy failed. Use the raw JSON details if needed.", "warning"));
+
+  createPrButton.addEventListener('click', () => {
+    if (targetPath) {
+      window.open(buildGitHubNewFileUrl(targetPath), '_blank', 'noopener');
+    }
   });
-  createPrButton.addEventListener("click", createPullRequest);
 
   run();
 })();
