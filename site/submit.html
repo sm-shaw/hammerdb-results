@@ -12,29 +12,40 @@
     .hero{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:48px 0 40px;margin-bottom:22px}
     .hero h1{margin:10px 0 12px;font-size:clamp(2rem,4vw,2.8rem);line-height:1.1}
     .hero p{max-width:820px;color:#d8e2ff;margin:0}
-    .badges{display:flex;gap:8px;flex-wrap:wrap}.badge{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.26);font-weight:700;font-size:.84rem}
+    .badges{display:flex;gap:8px;flex-wrap:wrap}
+    .badge{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.26);font-weight:700;font-size:.84rem}
     .hero-warn{margin-top:18px;padding:12px 14px;border-radius:12px;background:rgba(245,158,11,.16);border:1px solid rgba(245,158,11,.35);color:#ffe7bd;font-weight:600}
-    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.05);margin-bottom:14px}
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.05);margin-bottom:14px}
     .card h2,.card h3{margin:0 0 8px}.card p{margin:0 0 12px}.muted{color:var(--muted)}
     .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;background:#111827;color:#fff;text-decoration:none;padding:10px 14px;font-weight:800;cursor:pointer;font:inherit;font-size:.94rem}
-    .btn.primary{background:var(--blue)}.btn.secondary{background:#e9efff;color:#1e3a8a}.btn:disabled{opacity:.55;cursor:not-allowed}.star{color:#facc15;font-size:1.05rem;line-height:1}
-    .status{border-radius:14px;padding:14px 16px;margin-bottom:14px;border:1px solid var(--info-line);background:var(--info-bg);color:#1e3a8a}.status h3{margin:0 0 4px}.status p{margin:0}.status.success{border-color:var(--good-line);background:var(--good-bg);color:var(--good)}.status.warning{border-color:var(--warn-line);background:var(--warn-bg);color:var(--warn)}.status.error{border-color:var(--err-line);background:var(--err-bg);color:var(--err)}
-    .summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.summary-item{background:#f8fbff;border:1px solid #e6edf8;border-radius:12px;padding:10px}.summary-item .label{font-size:.76rem;text-transform:uppercase;color:var(--muted);font-weight:800;letter-spacing:.02em}.summary-item .value{font-weight:800;word-break:break-word;margin-top:3px}.summary-item.metric{background:#eef4ff;border-color:#d5e3ff}
+    .btn.primary{background:var(--blue)}.btn.secondary{background:#e9efff;color:#1e3a8a}.btn:disabled{opacity:.55;cursor:not-allowed}
+    .star{color:#facc15;font-size:1.05rem;line-height:1}
+    .status{border-radius:14px;padding:14px 16px;margin-bottom:14px;border:1px solid var(--info-line);background:var(--info-bg);color:#1e3a8a}
+    .status h3{margin:0 0 4px}.status p{margin:0}
+    .status.success{border-color:var(--good-line);background:var(--good-bg);color:var(--good)}
+    .status.warning{border-color:var(--warn-line);background:var(--warn-bg);color:var(--warn)}
+    .status.error{border-color:var(--err-line);background:var(--err-bg);color:var(--err)}
+    .summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .summary-item{background:#f8fbff;border:1px solid #e6edf8;border-radius:12px;padding:10px}
+    .summary-item .label{font-size:.76rem;text-transform:uppercase;color:var(--muted);font-weight:800;letter-spacing:.02em}
+    .summary-item .value{font-weight:800;word-break:break-word;margin-top:3px}
+    .summary-item.metric{background:#eef4ff;border-color:#d5e3ff}
     .path-box,.code-box{background:#0b1020;color:#dbeafe;border-radius:12px;padding:12px;overflow:auto;white-space:pre-wrap;word-break:break-word;border:1px solid #172554;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.88rem}
     .button-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}.copy-note{color:var(--good);font-weight:800;font-size:.88rem;min-height:1.2em}
-    details{border:1px solid var(--line);border-radius:14px;background:#fff;padding:12px}summary{cursor:pointer;font-weight:800}.details-body{margin-top:12px}.compact{font-size:.9rem}.steps{margin:8px 0 0;padding-left:1.3rem}.steps li{margin:5px 0}.technical{margin-top:10px}.technical code{display:block;background:#f8fbff;border:1px solid #e6edf8;border-radius:10px;padding:10px;white-space:nowrap;overflow:auto;color:#334155}
+    details{border:1px solid var(--line);border-radius:14px;background:#fff;padding:12px}summary{cursor:pointer;font-weight:800}.details-body{margin-top:12px}.compact{font-size:.9rem}
+    .steps,.service-flow{margin:8px 0 0;padding-left:1.3rem}.steps li,.service-flow li{margin:5px 0}
+    .technical{margin-top:10px}.technical code{display:block;background:#f8fbff;border:1px solid #e6edf8;border-radius:10px;padding:10px;white-space:nowrap;overflow:auto;color:#334155}
     @media(max-width:860px){.grid,.summary{grid-template-columns:1fr}.hero{padding:38px 0 32px}.wrap{padding-left:16px;padding-right:16px}}
   </style>
 </head>
 <body>
-  <header class="hero">
-    <div class="wrap">
-      <div class="badges"><span class="badge">Prototype</span><span class="badge">GitHub Reviewed</span><span class="badge">Unofficial</span></div>
-      <h1>Submit HammerDB Result Artifact</h1>
-      <p>Preview a HammerDB result artifact and submit it to the community results repository.</p>
-      <div class="hero-warn">Community-submitted HammerDB results are unaudited and are not official TPC benchmark results.</div>
-    </div>
-  </header>
+  <header class="hero"><div class="wrap">
+    <div class="badges"><span class="badge">Prototype</span><span class="badge">GitHub Reviewed</span><span class="badge">Unofficial</span></div>
+    <h1>Submit HammerDB Result Artifact</h1>
+    <p>Preview a HammerDB result artifact and prepare it for pull request submission.</p>
+    <div class="hero-warn">Community-submitted HammerDB results are unaudited and are not official TPC benchmark results.</div>
+  </div></header>
 
   <main class="wrap">
     <section class="grid">
@@ -46,13 +57,11 @@
       <article class="card">
         <h2>How submission works</h2>
         <ol class="steps">
-          <li>Star the HammerDB project.</li>
           <li>Review the artifact preview.</li>
-          <li>Copy the JSON if prompted.</li>
-          <li>Click Open GitHub submission.</li>
-          <li>Sign in to GitHub if prompted.</li>
-          <li>Review the file contents.</li>
-          <li>Commit the change and open the pull request.</li>
+          <li>Confirm the computed target path.</li>
+          <li>Click <strong>Create pull request</strong>.</li>
+          <li>The submission service creates a branch and commits the JSON artifact.</li>
+          <li>The service opens a pull request for review and redirects you to it.</li>
         </ol>
       </article>
     </section>
@@ -62,20 +71,14 @@
     <section id="artifact-details" class="card" hidden>
       <h2>Artifact source</h2>
       <p class="muted compact">The artifact URL was provided by HammerDB.</p>
-      <details class="technical">
-        <summary>Show artifact URL</summary>
-        <code id="artifact-url"></code>
-      </details>
+      <details class="technical"><summary>Show artifact URL</summary><code id="artifact-url"></code></details>
     </section>
 
-    <section id="preview-card" class="card" hidden>
-      <h2>Artifact preview</h2>
-      <div id="preview" class="summary"></div>
-    </section>
+    <section id="preview-card" class="card" hidden><h2>Artifact preview</h2><div id="preview" class="summary"></div></section>
 
     <section id="target-card" class="card" hidden>
       <h2>Target repository path</h2>
-      <p class="muted">The JSON artifact will be submitted at this computed path.</p>
+      <p class="muted">The JSON artifact will be committed at this computed path.</p>
       <pre id="target-path" class="path-box"></pre>
       <div class="button-row"><button id="copy-path" type="button" class="btn secondary">Copy path</button><span id="copy-path-note" class="copy-note" aria-live="polite"></span></div>
     </section>
@@ -90,26 +93,45 @@
       </details>
     </section>
 
-    <section id="large-url-warning" class="status warning" hidden></section>
+    <section id="service-status" class="status warning">
+      <h3>Submission service not configured</h3>
+      <p>This artifact can be loaded, validated and prepared, but automatic pull request creation requires the HammerDB results submission service.</p>
+    </section>
 
     <section class="card">
-      <h2>Submit through GitHub</h2>
-      <p class="muted">Open GitHub with the artifact path and JSON pre-filled where possible. Review the file, add a short commit message, and submit the change through GitHub.</p>
-      <p><strong>Suggested PR/commit note:</strong> <span id="commit-note">Community-submitted HammerDB result artifact.</span></p>
-      <div class="button-row"><button id="open-github" type="button" class="btn primary" disabled>Open GitHub submission</button></div>
+      <h2>Create pull request</h2>
+      <p class="muted">This submits the validated artifact to an authenticated service. The service creates a branch, commits the JSON artifact at the computed path, opens a GitHub pull request for review, and returns the PR URL.</p>
+      <p><strong>Target repository:</strong> <span id="target-repo-label"></span></p>
+      <div class="button-row"><button id="create-pr" type="button" class="btn primary" disabled>Create pull request</button></div>
+    </section>
+
+    <section class="card">
+      <h2>Submission service contract</h2>
+      <p class="muted">GitHub tokens must stay server-side. The browser must not contain GitHub tokens or secrets.</p>
+      <ol class="service-flow">
+        <li>Validate artifact JSON.</li>
+        <li>Create branch <code>submit/&lt;database&gt;/&lt;jobid&gt;</code>.</li>
+        <li>Commit the artifact file at the computed target path.</li>
+        <li>Open a pull request against the target branch.</li>
+        <li>Return the pull request URL.</li>
+        <li>GitHub Actions rebuilds the leaderboard after merge.</li>
+      </ol>
     </section>
   </main>
 
 <script>
 (function () {
-  // Change TARGET_OWNER/TARGET_REPO when the results repository moves under the TPC.
+  // Prototype uses sm-shaw/hammerdb-results.
+  // When the workflow moves under the TPC, change TARGET_OWNER/TARGET_REPO/SUBMIT_ENDPOINT.
+  // SUBMIT_ENDPOINT is the authenticated service that creates the branch, commit and pull request.
   const TARGET_OWNER = "sm-shaw";
   const TARGET_REPO = "hammerdb-results";
   const TARGET_BRANCH = "master";
   const HAMMERDB_PROJECT_URL = "https://github.com/TPC-Council/HammerDB";
-  const MAX_PREFILLED_URL_LENGTH = 7500;
+  const SUBMIT_ENDPOINT = "";
 
   const statusEl = document.getElementById("status");
+  const serviceStatusEl = document.getElementById("service-status");
   const artifactDetailsEl = document.getElementById("artifact-details");
   const artifactUrlEl = document.getElementById("artifact-url");
   const previewCardEl = document.getElementById("preview-card");
@@ -121,15 +143,17 @@
   const copyJsonButton = document.getElementById("copy-json");
   const copyPathNote = document.getElementById("copy-path-note");
   const copyJsonNote = document.getElementById("copy-json-note");
-  const openGithubButton = document.getElementById("open-github");
-  const largeUrlWarningEl = document.getElementById("large-url-warning");
+  const createPrButton = document.getElementById("create-pr");
+  const targetRepoLabel = document.getElementById("target-repo-label");
   const starLinkEl = document.getElementById("star-link");
 
   let targetPath = "";
   let rawJson = "";
-  let githubUrl = "";
+  let artifactPayload = null;
+  let jobId = "";
 
   starLinkEl.href = HAMMERDB_PROJECT_URL;
+  targetRepoLabel.textContent = TARGET_OWNER + "/" + TARGET_REPO;
 
   function setStatus(title, message, kind) {
     statusEl.className = "status" + (kind ? " " + kind : "");
@@ -141,18 +165,14 @@
     statusEl.append(heading, body);
   }
 
-  function setWarning(message) {
-    largeUrlWarningEl.replaceChildren();
+  function setServiceStatus(title, message, kind) {
+    serviceStatusEl.className = "status" + (kind ? " " + kind : "");
+    serviceStatusEl.replaceChildren();
     const heading = document.createElement("h3");
-    heading.textContent = "URL too large, use copy fallback";
+    heading.textContent = title;
     const body = document.createElement("p");
     body.textContent = message;
-    largeUrlWarningEl.append(heading, body);
-    largeUrlWarningEl.hidden = false;
-  }
-
-  function clearPreview() {
-    previewEl.replaceChildren();
+    serviceStatusEl.append(heading, body);
   }
 
   function addPreviewItem(label, value, isMetric) {
@@ -169,17 +189,12 @@
   }
 
   function slugify(value) {
-    return String(value || "")
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
+    return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   }
 
   function parseTimestampParts(timestamp) {
     if (!timestamp) return null;
-    const normalized = String(timestamp).replace("T", " ");
-    const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})(?:\s|$)/);
+    const match = String(timestamp).replace("T", " ").match(/^(\d{4})-(\d{2})-(\d{2})(?:\s|$)/);
     if (!match) return null;
     return { year: match[1], month: match[2] };
   }
@@ -188,19 +203,6 @@
     const number = Number(value);
     if (!Number.isFinite(number)) return value;
     return number.toLocaleString();
-  }
-
-  function buildGithubUrl(path, json, jobid) {
-    const message = "Add HammerDB result artifact " + jobid;
-    const baseUrl = "https://github.com/" + TARGET_OWNER + "/" + TARGET_REPO + "/new/" + TARGET_BRANCH;
-    const filenameParam = "filename=" + encodeURIComponent(path);
-    const valueParam = "value=" + encodeURIComponent(json);
-    const messageParam = "message=" + encodeURIComponent(message);
-    const fullUrl = baseUrl + "?" + filenameParam + "&" + valueParam + "&" + messageParam;
-    if (fullUrl.length < MAX_PREFILLED_URL_LENGTH) {
-      return { url: fullUrl, prefilled: true };
-    }
-    return { url: baseUrl + "?" + filenameParam + "&" + messageParam, prefilled: false };
   }
 
   async function copyText(text, noteEl) {
@@ -229,14 +231,14 @@
   }
 
   function showMissingFields(job, required, missing) {
-    clearPreview();
+    previewEl.replaceChildren();
     required.forEach((field) => addPreviewItem(field.replace(/_/g, " "), job[field], false));
     previewCardEl.hidden = false;
     setStatus("Missing required fields", "The artifact is missing required job fields: " + missing.join(", ") + ".", "error");
   }
 
   function prepareSubmission(job, result, artifact) {
-    clearPreview();
+    previewEl.replaceChildren();
     addPreviewItem("Job ID", job.jobid, false);
     addPreviewItem("Benchmark", job.benchmark, false);
     addPreviewItem("Database", job.database_display || job.database, false);
@@ -260,20 +262,31 @@
     }
 
     const benchmarkSlug = slugify(job.benchmark);
-    const databaseSlug = slugify(job.database_display);
+    const databaseSlug = slugify(job.database_display || job.database);
     targetPath = "results/" + benchmarkSlug + "/" + databaseSlug + "/" + timestampParts.year + "/" + timestampParts.month + "/" + job.jobid + ".json";
     targetPathEl.textContent = targetPath;
     targetCardEl.hidden = false;
     previewCardEl.hidden = false;
+    artifactPayload = artifact;
+    jobId = job.jobid;
 
-    const github = buildGithubUrl(targetPath, rawJson, job.jobid);
-    githubUrl = github.url;
-    openGithubButton.disabled = false;
-    if (!github.prefilled) {
-      setWarning("This artifact is too large to safely preload into a GitHub URL. Copy the JSON below, then GitHub will open with the target filename pre-filled.");
+    if (SUBMIT_ENDPOINT) {
+      createPrButton.disabled = false;
+      setServiceStatus("Submission service configured", "Create pull request will submit the validated artifact to the HammerDB results submission service.", "success");
+    } else {
+      createPrButton.disabled = true;
+      setServiceStatus("Submission service not configured", "This artifact is validated and ready, but automatic pull request creation requires the HammerDB results submission service.", "warning");
     }
 
-    setStatus("Artifact loaded and ready", "Preview, validation, target path, and GitHub submission link are ready.", "success");
+    setStatus("Artifact loaded and ready", "Preview, validation and target path are ready.", "success");
+  }
+
+  async function fetchArtifact(artifactUrl) {
+    let response = await fetch(artifactUrl, { headers: { "Accept": "application/json" } });
+    if (response.status === 401) {
+      response = await fetch(artifactUrl, { headers: { "Accept": "application/json" }, credentials: "include" });
+    }
+    return response;
   }
 
   async function run() {
@@ -282,6 +295,7 @@
 
     if (!artifactUrl) {
       setStatus("Missing artifact_url", "This page is normally opened from HammerDB using Share with TPC-OSS. Open it with ?artifact_url=<encoded HammerDB summaryjson URL> to preview a result artifact.", "error");
+      setServiceStatus("Submission service not configured", "Automatic pull request creation requires a configured submission service.", "warning");
       return;
     }
 
@@ -291,15 +305,12 @@
 
     let response;
     try {
-      response = await fetch(artifactUrl, { headers: { "Accept": "application/json" } });
-
-      if (response.status === 401) {
-        response = await fetch(artifactUrl, { headers: { "Accept": "application/json" }, credentials: "include" });
-      }
+      response = await fetchArtifact(artifactUrl);
     } catch (err) {
       setStatus("Fetch failed", "Failed to fetch artifact_url. Check network access, CORS headers, Basic Auth, and URL validity.", "error");
       return;
     }
+
     if (!response.ok) {
       setStatus("Fetch failed", "Failed to fetch artifact_url. HTTP status: " + response.status + ".", "error");
       return;
@@ -331,9 +342,40 @@
 
   copyPathButton.addEventListener("click", () => copyText(targetPath, copyPathNote));
   copyJsonButton.addEventListener("click", () => copyText(rawJson, copyJsonNote));
-  openGithubButton.addEventListener("click", () => {
-    if (githubUrl) {
-      window.open(githubUrl, "_blank", "noopener");
+
+  createPrButton.addEventListener("click", async () => {
+    if (!SUBMIT_ENDPOINT || !targetPath || !rawJson || !artifactPayload) return;
+    setStatus("Creating pull request", "Submitting artifact to the HammerDB results submission service.", "");
+
+    try {
+      const response = await fetch(SUBMIT_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({
+          target_owner: TARGET_OWNER,
+          target_repo: TARGET_REPO,
+          target_branch: TARGET_BRANCH,
+          target_path: targetPath,
+          artifact: artifactPayload,
+          artifact_json: rawJson,
+          commit_message: "Add HammerDB result artifact " + jobId,
+          pr_title: "Add HammerDB result artifact " + jobId,
+          pr_body: "Community-submitted HammerDB result artifact."
+        })
+      });
+
+      let result = {};
+      try { result = await response.json(); } catch (err) { result = {}; }
+
+      if (!response.ok || !result.ok || !result.pr_url) {
+        setStatus("Pull request creation failed", result.error || "Submission service returned an error.", "error");
+        return;
+      }
+
+      setStatus("Pull request created", "Opening pull request for review.", "success");
+      window.location.href = result.pr_url;
+    } catch (err) {
+      setStatus("Submission service request failed", "Could not contact the HammerDB results submission service.", "error");
     }
   });
 
