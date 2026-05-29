@@ -5,7 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Submit HammerDB Result Artifact</title>
   <style>
-    :root{--bg:#f4f7ff;--card:#fff;--line:#dbe4f0;--text:#0f172a;--muted:#64748b;--blue:#2563eb;--navy:#08112f;--navy2:#12275f;--good:#15803d;--good-bg:#f0fdf4;--good-line:#bbf7d0;--warn:#b45309;--warn-bg:#fff7ed;--warn-line:#fdba74;--err:#be123c;--err-bg:#fff1f2;--err-line:#fecdd3;--info:#1d4ed8;--info-bg:#eff6ff;--info-line:#bfdbfe}
+    :root{
+      --bg:#f4f7ff;--card:#fff;--line:#dbe4f0;--text:#0f172a;--muted:#64748b;
+      --blue:#2563eb;--navy:#08112f;--navy2:#12275f;
+      --good:#15803d;--good-bg:#f0fdf4;--good-line:#bbf7d0;
+      --warn:#b45309;--warn-bg:#fff7ed;--warn-line:#fdba74;
+      --err:#be123c;--err-bg:#fff1f2;--err-line:#fecdd3;
+      --info:#1d4ed8;--info-bg:#eff6ff;--info-line:#bfdbfe
+    }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--text);line-height:1.5}
     .wrap{max-width:1120px;margin:0 auto;padding:0 20px 30px}
@@ -19,8 +26,8 @@
     .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.05);margin-bottom:14px}
     .card h2,.card h3{margin:0 0 8px}.card p{margin:0 0 12px}.muted{color:var(--muted)}
     .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;background:#111827;color:#fff;text-decoration:none;padding:10px 14px;font-weight:800;cursor:pointer;font:inherit;font-size:.94rem}
-    .btn.primary{background:var(--blue)}.btn.secondary{background:#e9efff;color:#1e3a8a}.btn:disabled{opacity:.55;cursor:not-allowed}
-    .star{color:#facc15;font-size:1.05rem;line-height:1}
+    .btn.primary{background:var(--blue)}.btn.secondary{background:#e9efff;color:#1e3a8a}.btn.good{background:#15803d}
+    .btn:disabled{opacity:.55;cursor:not-allowed}.star{color:#facc15;font-size:1.05rem;line-height:1}
     .status{border-radius:14px;padding:14px 16px;margin-bottom:14px;border:1px solid var(--info-line);background:var(--info-bg);color:#1e3a8a}
     .status h3{margin:0 0 4px}.status p{margin:0}
     .status.success{border-color:var(--good-line);background:var(--good-bg);color:var(--good)}
@@ -32,20 +39,26 @@
     .summary-item .value{font-weight:800;word-break:break-word;margin-top:3px}
     .summary-item.metric{background:#eef4ff;border-color:#d5e3ff}
     .path-box,.code-box{background:#0b1020;color:#dbeafe;border-radius:12px;padding:12px;overflow:auto;white-space:pre-wrap;word-break:break-word;border:1px solid #172554;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.88rem}
-    .button-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}.copy-note{color:var(--good);font-weight:800;font-size:.88rem;min-height:1.2em}
-    details{border:1px solid var(--line);border-radius:14px;background:#fff;padding:12px}summary{cursor:pointer;font-weight:800}.details-body{margin-top:12px}.compact{font-size:.9rem}
-    .steps,.service-flow{margin:8px 0 0;padding-left:1.3rem}.steps li,.service-flow li{margin:5px 0}
+    .button-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .copy-note{color:var(--good);font-weight:800;font-size:.88rem;min-height:1.2em}
+    details{border:1px solid var(--line);border-radius:14px;background:#fff;padding:12px}
+    summary{cursor:pointer;font-weight:800}.details-body{margin-top:12px}.compact{font-size:.9rem}
+    .steps{margin:8px 0 0;padding-left:1.3rem}.steps li{margin:5px 0}
     .technical{margin-top:10px}.technical code{display:block;background:#f8fbff;border:1px solid #e6edf8;border-radius:10px;padding:10px;white-space:nowrap;overflow:auto;color:#334155}
+    .small-note{font-size:.9rem;color:var(--muted);margin-top:10px}
+    code.inline{background:#eef4ff;border:1px solid #d5e3ff;border-radius:6px;padding:1px 5px}
     @media(max-width:860px){.grid,.summary{grid-template-columns:1fr}.hero{padding:38px 0 32px}.wrap{padding-left:16px;padding-right:16px}}
   </style>
 </head>
 <body>
-  <header class="hero"><div class="wrap">
-    <div class="badges"><span class="badge">Prototype</span><span class="badge">GitHub Reviewed</span><span class="badge">Unofficial</span></div>
-    <h1>Submit HammerDB Result Artifact</h1>
-    <p>Preview a HammerDB result artifact and prepare it for pull request submission.</p>
-    <div class="hero-warn">Community-submitted HammerDB results are unaudited and are not official TPC benchmark results.</div>
-  </div></header>
+  <header class="hero">
+    <div class="wrap">
+      <div class="badges"><span class="badge">Prototype</span><span class="badge">GitHub Reviewed</span><span class="badge">Unofficial</span></div>
+      <h1>Submit HammerDB Result Artifact</h1>
+      <p>Preview a HammerDB result artifact and submit it to the community results repository.</p>
+      <div class="hero-warn">Community-submitted HammerDB results are unaudited and are not official TPC benchmark results.</div>
+    </div>
+  </header>
 
   <main class="wrap">
     <section class="grid">
@@ -58,10 +71,10 @@
         <h2>How submission works</h2>
         <ol class="steps">
           <li>Review the artifact preview.</li>
-          <li>Confirm the computed target path.</li>
-          <li>Click <strong>Create pull request</strong>.</li>
-          <li>The submission service creates a branch and commits the JSON artifact.</li>
-          <li>The service opens a pull request for review and redirects you to it.</li>
+          <li>Download the validated JSON artifact.</li>
+          <li>Open the GitHub upload page for the computed target folder.</li>
+          <li>Upload the downloaded JSON file.</li>
+          <li>GitHub records the submitter and opens the normal review path.</li>
         </ol>
       </article>
     </section>
@@ -71,16 +84,25 @@
     <section id="artifact-details" class="card" hidden>
       <h2>Artifact source</h2>
       <p class="muted compact">The artifact URL was provided by HammerDB.</p>
-      <details class="technical"><summary>Show artifact URL</summary><code id="artifact-url"></code></details>
+      <details class="technical">
+        <summary>Show artifact URL</summary>
+        <code id="artifact-url"></code>
+      </details>
     </section>
 
-    <section id="preview-card" class="card" hidden><h2>Artifact preview</h2><div id="preview" class="summary"></div></section>
+    <section id="preview-card" class="card" hidden>
+      <h2>Artifact preview</h2>
+      <div id="preview" class="summary"></div>
+    </section>
 
     <section id="target-card" class="card" hidden>
       <h2>Target repository path</h2>
-      <p class="muted">The JSON artifact will be committed at this computed path.</p>
+      <p class="muted">Upload the downloaded JSON artifact to this computed path.</p>
       <pre id="target-path" class="path-box"></pre>
-      <div class="button-row"><button id="copy-path" type="button" class="btn secondary">Copy path</button><span id="copy-path-note" class="copy-note" aria-live="polite"></span></div>
+      <div class="button-row">
+        <button id="copy-path" type="button" class="btn secondary">Copy path</button>
+        <span id="copy-path-note" class="copy-note" aria-live="polite"></span>
+      </div>
     </section>
 
     <section class="card">
@@ -88,50 +110,37 @@
         <summary>Show raw artifact JSON</summary>
         <div class="details-body">
           <pre id="raw-json" class="code-box">Artifact JSON has not loaded yet.</pre>
-          <div class="button-row"><button id="copy-json" type="button" class="btn secondary" disabled>Copy JSON</button><span id="copy-json-note" class="copy-note" aria-live="polite"></span></div>
+          <div class="button-row">
+            <button id="copy-json" type="button" class="btn secondary" disabled>Copy JSON</button>
+            <span id="copy-json-note" class="copy-note" aria-live="polite"></span>
+          </div>
         </div>
       </details>
     </section>
 
-    <section id="service-status" class="status warning">
-      <h3>Submission service not configured</h3>
-      <p>This artifact can be loaded, validated and prepared, but automatic pull request creation requires the HammerDB results submission service.</p>
-    </section>
-
     <section class="card">
-      <h2>Create pull request</h2>
-      <p class="muted">This submits the validated artifact to an authenticated service. The service creates a branch, commits the JSON artifact at the computed path, opens a GitHub pull request for review, and returns the PR URL.</p>
+      <h2>Submit manually through GitHub</h2>
+      <p class="muted">For this prototype, use GitHub’s normal web contribution flow. Download the artifact JSON, then upload it to the computed folder in the results repository. GitHub records who submitted the change and the maintainer reviews it before merge.</p>
       <p><strong>Target repository:</strong> <span id="target-repo-label"></span></p>
-      <div class="button-row"><button id="create-pr" type="button" class="btn primary" disabled>Create pull request</button></div>
-    </section>
-
-    <section class="card">
-      <h2>Submission service contract</h2>
-      <p class="muted">GitHub tokens must stay server-side. The browser must not contain GitHub tokens or secrets.</p>
-      <ol class="service-flow">
-        <li>Validate artifact JSON.</li>
-        <li>Create branch <code>submit/&lt;database&gt;/&lt;jobid&gt;</code>.</li>
-        <li>Commit the artifact file at the computed target path.</li>
-        <li>Open a pull request against the target branch.</li>
-        <li>Return the pull request URL.</li>
-        <li>GitHub Actions rebuilds the leaderboard after merge.</li>
-      </ol>
+      <p><strong>Artifact filename:</strong> <span id="artifact-filename">—</span></p>
+      <div class="button-row">
+        <button id="download-json" type="button" class="btn good" disabled>Download artifact JSON</button>
+        <button id="open-upload" type="button" class="btn primary" disabled>Open GitHub upload page</button>
+      </div>
+      <p class="small-note">No large JSON is passed through the URL. No GitHub token is stored in this page. A future submission service can replace this with one-click pull request creation.</p>
     </section>
   </main>
 
 <script>
 (function () {
   // Prototype uses sm-shaw/hammerdb-results.
-  // When the workflow moves under the TPC, change TARGET_OWNER/TARGET_REPO/SUBMIT_ENDPOINT.
-  // SUBMIT_ENDPOINT is the authenticated service that creates the branch, commit and pull request.
+  // When the workflow moves under the TPC, change TARGET_OWNER/TARGET_REPO.
   const TARGET_OWNER = "sm-shaw";
   const TARGET_REPO = "hammerdb-results";
   const TARGET_BRANCH = "master";
   const HAMMERDB_PROJECT_URL = "https://github.com/TPC-Council/HammerDB";
-  const SUBMIT_ENDPOINT = "";
 
   const statusEl = document.getElementById("status");
-  const serviceStatusEl = document.getElementById("service-status");
   const artifactDetailsEl = document.getElementById("artifact-details");
   const artifactUrlEl = document.getElementById("artifact-url");
   const previewCardEl = document.getElementById("preview-card");
@@ -143,14 +152,16 @@
   const copyJsonButton = document.getElementById("copy-json");
   const copyPathNote = document.getElementById("copy-path-note");
   const copyJsonNote = document.getElementById("copy-json-note");
-  const createPrButton = document.getElementById("create-pr");
+  const downloadJsonButton = document.getElementById("download-json");
+  const openUploadButton = document.getElementById("open-upload");
+  const artifactFilenameEl = document.getElementById("artifact-filename");
   const targetRepoLabel = document.getElementById("target-repo-label");
   const starLinkEl = document.getElementById("star-link");
 
   let targetPath = "";
+  let targetDirectory = "";
+  let artifactFilename = "";
   let rawJson = "";
-  let artifactPayload = null;
-  let jobId = "";
 
   starLinkEl.href = HAMMERDB_PROJECT_URL;
   targetRepoLabel.textContent = TARGET_OWNER + "/" + TARGET_REPO;
@@ -165,14 +176,8 @@
     statusEl.append(heading, body);
   }
 
-  function setServiceStatus(title, message, kind) {
-    serviceStatusEl.className = "status" + (kind ? " " + kind : "");
-    serviceStatusEl.replaceChildren();
-    const heading = document.createElement("h3");
-    heading.textContent = title;
-    const body = document.createElement("p");
-    body.textContent = message;
-    serviceStatusEl.append(heading, body);
+  function clearPreview() {
+    previewEl.replaceChildren();
   }
 
   function addPreviewItem(label, value, isMetric) {
@@ -189,12 +194,17 @@
   }
 
   function slugify(value) {
-    return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
   }
 
   function parseTimestampParts(timestamp) {
     if (!timestamp) return null;
-    const match = String(timestamp).replace("T", " ").match(/^(\d{4})-(\d{2})-(\d{2})(?:\s|$)/);
+    const normalized = String(timestamp).replace("T", " ");
+    const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})(?:\s|$)/);
     if (!match) return null;
     return { year: match[1], month: match[2] };
   }
@@ -231,14 +241,14 @@
   }
 
   function showMissingFields(job, required, missing) {
-    previewEl.replaceChildren();
+    clearPreview();
     required.forEach((field) => addPreviewItem(field.replace(/_/g, " "), job[field], false));
     previewCardEl.hidden = false;
     setStatus("Missing required fields", "The artifact is missing required job fields: " + missing.join(", ") + ".", "error");
   }
 
-  function prepareSubmission(job, result, artifact) {
-    previewEl.replaceChildren();
+  function prepareSubmission(job, result) {
+    clearPreview();
     addPreviewItem("Job ID", job.jobid, false);
     addPreviewItem("Benchmark", job.benchmark, false);
     addPreviewItem("Database", job.database_display || job.database, false);
@@ -263,29 +273,27 @@
 
     const benchmarkSlug = slugify(job.benchmark);
     const databaseSlug = slugify(job.database_display || job.database);
-    targetPath = "results/" + benchmarkSlug + "/" + databaseSlug + "/" + timestampParts.year + "/" + timestampParts.month + "/" + job.jobid + ".json";
+    artifactFilename = job.jobid + ".json";
+    targetDirectory = "results/" + benchmarkSlug + "/" + databaseSlug + "/" + timestampParts.year + "/" + timestampParts.month;
+    targetPath = targetDirectory + "/" + artifactFilename;
+
     targetPathEl.textContent = targetPath;
+    artifactFilenameEl.textContent = artifactFilename;
     targetCardEl.hidden = false;
     previewCardEl.hidden = false;
-    artifactPayload = artifact;
-    jobId = job.jobid;
+    downloadJsonButton.disabled = false;
+    openUploadButton.disabled = false;
 
-    if (SUBMIT_ENDPOINT) {
-      createPrButton.disabled = false;
-      setServiceStatus("Submission service configured", "Create pull request will submit the validated artifact to the HammerDB results submission service.", "success");
-    } else {
-      createPrButton.disabled = true;
-      setServiceStatus("Submission service not configured", "This artifact is validated and ready, but automatic pull request creation requires the HammerDB results submission service.", "warning");
-    }
-
-    setStatus("Artifact loaded and ready", "Preview, validation and target path are ready.", "success");
+    setStatus("Artifact loaded and ready", "Preview, validation, target path and download are ready.", "success");
   }
 
   async function fetchArtifact(artifactUrl) {
     let response = await fetch(artifactUrl, { headers: { "Accept": "application/json" } });
+
     if (response.status === 401) {
       response = await fetch(artifactUrl, { headers: { "Accept": "application/json" }, credentials: "include" });
     }
+
     return response;
   }
 
@@ -295,7 +303,6 @@
 
     if (!artifactUrl) {
       setStatus("Missing artifact_url", "This page is normally opened from HammerDB using Share with TPC-OSS. Open it with ?artifact_url=<encoded HammerDB summaryjson URL> to preview a result artifact.", "error");
-      setServiceStatus("Submission service not configured", "Automatic pull request creation requires a configured submission service.", "warning");
       return;
     }
 
@@ -337,46 +344,29 @@
       return;
     }
 
-    prepareSubmission(job, result, artifact);
+    prepareSubmission(job, result);
   }
 
   copyPathButton.addEventListener("click", () => copyText(targetPath, copyPathNote));
   copyJsonButton.addEventListener("click", () => copyText(rawJson, copyJsonNote));
 
-  createPrButton.addEventListener("click", async () => {
-    if (!SUBMIT_ENDPOINT || !targetPath || !rawJson || !artifactPayload) return;
-    setStatus("Creating pull request", "Submitting artifact to the HammerDB results submission service.", "");
+  downloadJsonButton.addEventListener("click", () => {
+    if (!rawJson || !artifactFilename) return;
+    const blob = new Blob([rawJson + "\n"], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = artifactFilename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  });
 
-    try {
-      const response = await fetch(SUBMIT_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify({
-          target_owner: TARGET_OWNER,
-          target_repo: TARGET_REPO,
-          target_branch: TARGET_BRANCH,
-          target_path: targetPath,
-          artifact: artifactPayload,
-          artifact_json: rawJson,
-          commit_message: "Add HammerDB result artifact " + jobId,
-          pr_title: "Add HammerDB result artifact " + jobId,
-          pr_body: "Community-submitted HammerDB result artifact."
-        })
-      });
-
-      let result = {};
-      try { result = await response.json(); } catch (err) { result = {}; }
-
-      if (!response.ok || !result.ok || !result.pr_url) {
-        setStatus("Pull request creation failed", result.error || "Submission service returned an error.", "error");
-        return;
-      }
-
-      setStatus("Pull request created", "Opening pull request for review.", "success");
-      window.location.href = result.pr_url;
-    } catch (err) {
-      setStatus("Submission service request failed", "Could not contact the HammerDB results submission service.", "error");
-    }
+  openUploadButton.addEventListener("click", () => {
+    if (!targetDirectory) return;
+    const uploadUrl = "https://github.com/" + TARGET_OWNER + "/" + TARGET_REPO + "/upload/" + TARGET_BRANCH + "/" + encodeURI(targetDirectory);
+    window.open(uploadUrl, "_blank", "noopener");
   });
 
   run();
