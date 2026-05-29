@@ -97,13 +97,11 @@
         <button id="download-json" type="button" class="btn good" disabled>1. Download JSON</button>
         <button id="open-upload" type="button" class="btn primary" disabled>2. Open GitHub upload</button>
       </div>
-
-      <p class="muted small">On GitHub, choose <strong>Create a new branch for this commit and start a pull request</strong> if that option is shown.</p>
     </section>
 
     <section class="card">
       <details>
-        <summary>Troubleshooting details</summary>
+        <summary>Artifact preview</summary>
         <div class="details-body">
           <p class="muted small">Artifact URL</p>
           <pre id="artifact-url" class="code-box">Not loaded.</pre>
@@ -133,6 +131,7 @@
   const targetDirectoryEl = document.getElementById("target-directory");
   const starLinkEl = document.getElementById("star-link");
 
+  let targetPath = "";
   let targetDirectory = "";
   let artifactFilename = "";
   let rawJson = "";
@@ -192,7 +191,17 @@
     return response;
   }
 
-  function prepareSubmission(job, result, artifact) {
+  async function artifactAlreadyExists(path) {
+    const rawUrl = "https://raw.githubusercontent.com/" + TARGET_OWNER + "/" + TARGET_REPO + "/" + TARGET_BRANCH + "/" + path;
+    try {
+      const response = await fetch(rawUrl, { method: "HEAD", cache: "no-store" });
+      return response.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function prepareSubmission(job, result) {
     previewEl.replaceChildren();
 
     addPreviewItem("Job ID", job.jobid, false);
@@ -221,16 +230,26 @@
 
     artifactFilename = job.jobid + ".json";
     targetDirectory = "results/" + benchmarkSlug + "/" + databaseSlug + "/" + timestampParts.year + "/" + timestampParts.month;
+    targetPath = targetDirectory + "/" + artifactFilename;
 
     artifactFilenameEl.textContent = artifactFilename;
     targetDirectoryEl.textContent = targetDirectory;
 
     previewCardEl.hidden = false;
     submitCardEl.hidden = false;
-    downloadJsonButton.disabled = false;
-    openUploadButton.disabled = false;
 
-    setStatus("Ready to submit", "Download the JSON artifact, then upload it to GitHub.", "success");
+    artifactAlreadyExists(targetPath).then((exists) => {
+      if (exists) {
+        downloadJsonButton.disabled = true;
+        openUploadButton.disabled = true;
+        setStatus("Already submitted", "This artifact already exists in the results repository. No upload is needed.", "success");
+        return;
+      }
+
+      downloadJsonButton.disabled = false;
+      openUploadButton.disabled = false;
+      setStatus("Ready to submit", "Download the JSON artifact, then upload it to GitHub.", "success");
+    });
   }
 
   async function run() {
@@ -281,7 +300,7 @@
       return;
     }
 
-    prepareSubmission(job, result, artifact);
+    prepareSubmission(job, result);
   }
 
   downloadJsonButton.addEventListener("click", () => {
