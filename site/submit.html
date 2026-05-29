@@ -289,14 +289,17 @@
     artifactUrlEl.textContent = artifactUrl;
     setStatus("Loading artifact", "Fetching and validating the HammerDB JSON artifact…", "");
 
-     let response;
+    let response;
     try {
-      response = await fetch(artifactUrl, { headers: { "Accept": "application/json" }, credentials: "include" });
+      response = await fetch(artifactUrl, { headers: { "Accept": "application/json" } });
+
+      if (response.status === 401) {
+        response = await fetch(artifactUrl, { headers: { "Accept": "application/json" }, credentials: "include" });
+      }
     } catch (err) {
-      setStatus("Fetch failed", "Failed to fetch artifact_url. Check network access and URL validity.", "error");
+      setStatus("Fetch failed", "Failed to fetch artifact_url. Check network access, CORS headers, Basic Auth, and URL validity.", "error");
       return;
     }
-
     if (!response.ok) {
       setStatus("Fetch failed", "Failed to fetch artifact_url. HTTP status: " + response.status + ".", "error");
       return;
