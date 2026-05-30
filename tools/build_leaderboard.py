@@ -77,8 +77,8 @@ def _write_html(rows: list[dict]) -> None:
     db_count = len({(r.get("database_display") or r.get("database") or "Unknown") for r in rows})
     top_nopm = max((r.get("nopm") for r in rows if isinstance(r.get("nopm"), (int, float))), default=None)
     html = f"""<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>HammerDB Result Artifacts</title>
-<style>:root{{--bg:#f7f6f3;--page:#f7f6f3;--panel:#fff;--line:#ddd8cf;--line-strong:#cfc7bb;--muted:#64748b;--blue:#2563eb;--text:#0f172a}}*{{box-sizing:border-box}}body{{margin:0;background:var(--bg);font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--text)}}
-.wrap{{max-width:1220px;margin:0 auto;padding:0 24px 32px}}.hero{{background:#fff;color:var(--text);padding:22px 0 0;margin-bottom:0}}
+<style>:root{{--bg:#f4f7ff;--page:#f4f7ff;--panel:#fff;--line:#ddd8cf;--line-strong:#cfc7bb;--muted:#64748b;--blue:#2563eb;--text:#0f172a}}*{{box-sizing:border-box}}body{{margin:0;background:var(--bg);font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--text)}}
+.wrap{{max-width:1220px;margin:0 auto;padding:0 24px 32px}}.hero{{background:var(--bg);color:var(--text);padding:22px 0 0;margin-bottom:0}}
 .hero-card{{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 20px;box-shadow:0 1px 2px rgba(60,50,40,.06)}}
     .brandbar{{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:12px}}.brand-left{{display:flex;align-items:flex-end;gap:18px}}.brand-hammerdb{{height:62px;width:auto;display:block}}.brand-tpc{{height:62px;width:auto;display:block;margin-top:0}}
 .hero h1{{margin:0;font-size:2.2rem;line-height:1.08;letter-spacing:-.03em}}.hero p{{max-width:780px;color:#334155;margin:0}}.badges{{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}}.badge{{padding:6px 12px;border-radius:999px;background:#fff;border:1px solid var(--line-strong);color:#334155;font-weight:700;font-size:.84rem}}
