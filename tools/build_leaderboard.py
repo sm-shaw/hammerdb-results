@@ -41,9 +41,23 @@ def _load_rows() -> list[dict]:
             "duration_minutes": cfg.get("duration_minutes"), "cpu_model": sys.get("cpumodel"), "cpu_count": sys.get("cpucount"),
             "memory": sys.get("memory"), "os_name": sys.get("os_name"), "source_path": rel,
         })
-    rows.sort(key=lambda r: (r.get("nopm") is None, -(r.get("nopm") or 0), r.get("jobid") or ""))
-    for i, r in enumerate(rows, 1):
-        r["rank"] = i
+    def _sort_key(row: dict) -> tuple:
+        benchmark = row.get("benchmark")
+        if benchmark == "TPROC-H":
+            value = row.get("geomean_seconds")
+            missing = value is None
+            return (benchmark or "", missing, float(value) if isinstance(value, (int, float)) else float("inf"), row.get("jobid") or "")
+        value = row.get("nopm")
+        missing = value is None
+        return (benchmark or "", missing, -(value or 0), row.get("jobid") or "")
+
+    rows.sort(key=_sort_key)
+
+    ranks_by_benchmark: dict[str, int] = {}
+    for r in rows:
+        benchmark = r.get("benchmark") or "Unknown"
+        ranks_by_benchmark[benchmark] = ranks_by_benchmark.get(benchmark, 0) + 1
+        r["rank"] = ranks_by_benchmark[benchmark]
     return rows
 
 
@@ -62,8 +76,10 @@ def _row_html(row: dict) -> str:
     benchmark = row.get("benchmark") or "—"
     if benchmark == "TPROC-C":
         result_html = f"<div class='main-metric'>{escape(_fmt_num(row.get('nopm')))} <span>NOPM</span></div><div class='sub-metric'>TPM {escape(_fmt_num(row.get('tpm')))}</div>"
+    elif benchmark == "TPROC-H":
+        result_html = f"<div class='main-metric'>{escape(_fmt_num(row.get('geomean_seconds')))} <span>Geomean sec</span></div><div class='sub-metric'>Total Query Time {escape(_fmt_num(row.get('total_query_time_seconds')))}</div>"
     else:
-        result_html = f"<div class='main-metric'>{escape(_fmt_num(row.get('geomean_seconds')))} <span>Geomean</span></div><div class='sub-metric'>Total Query Time {escape(_fmt_num(row.get('total_query_time_seconds')))}</div>"
+        result_html = "<div class='main-metric'>— <span>Result</span></div><div class='sub-metric'>No primary metric</div>"
     chips = [("Warehouses", row.get("warehouses")), ("VUs", row.get("virtual_users")), ("Rampup", row.get("rampup_minutes")), ("Duration", row.get("duration_minutes"))]
     cfg = "".join(f"<span class='chip'>{k}: {escape(_fmt_num(v))}</span>" for k, v in chips if v is not None)
     compact_sys = " · ".join([x for x in [row.get("cpu_count") and f"CPU {row.get('cpu_count')}", row.get("memory"), _short_os(row.get("os_name"))] if x and x != "—"])
@@ -73,9 +89,36 @@ def _row_html(row: dict) -> str:
 <div class='right'><div class='system'>{escape(compact_sys or 'System unavailable')}</div><div class='date'>{escape(str(row.get('timestamp') or '—'))}</div><a class='btn' href='{escape(report)}'>View report</a></div>
 </article>"""
 
+
+def _section_html(title: str, rows: list[dict], empty_message: str, sort_note: str) -> str:
+    visible = rows[:100]
+    count = len(rows)
+    if visible:
+        body = "".join(_row_html(r) for r in visible)
+    else:
+        body = f"<article class='empty-row'>{escape(empty_message)}</article>"
+    shown = min(count, 100)
+    return f"""<section class='section-head'><div><h2>{escape(title)}</h2><p>{escape(sort_note)}</p></div><div class='section-count'>Showing {shown} of {count}</div></section><section class='lb'>{body}</section>"""
+
 def _write_html(rows: list[dict]) -> None:
     db_count = len({(r.get("database_display") or r.get("database") or "Unknown") for r in rows})
-    top_nopm = max((r.get("nopm") for r in rows if isinstance(r.get("nopm"), (int, float))), default=None)
+    tproc_c_rows = sorted(
+        [r for r in rows if r.get("benchmark") == "TPROC-C"],
+        key=lambda r: (r.get("nopm") is None, -(r.get("nopm") or 0), r.get("jobid") or ""),
+    )
+    tproc_h_rows = sorted(
+        [r for r in rows if r.get("benchmark") == "TPROC-H"],
+        key=lambda r: (r.get("geomean_seconds") is None, r.get("geomean_seconds") if isinstance(r.get("geomean_seconds"), (int, float)) else float("inf"), r.get("jobid") or ""),
+    )
+
+    for i, r in enumerate(tproc_c_rows, 1):
+        r["rank"] = i
+    for i, r in enumerate(tproc_h_rows, 1):
+        r["rank"] = i
+
+    top_nopm = max((r.get("nopm") for r in tproc_c_rows if isinstance(r.get("nopm"), (int, float))), default=None)
+    top_c_html = _section_html("Top TPROC-C Results", tproc_c_rows, "No TPROC-C results have been submitted yet.", "Ranked by highest NOPM. Top 100 shown.")
+    top_h_html = _section_html("Top TPROC-H Results", tproc_h_rows, "No TPROC-H results have been submitted yet.", "Ranked by lowest geomean seconds. Top 100 shown.")
     html = f"""<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>HammerDB Result Artifacts</title>
 <style>:root{{--bg:#f4f7ff;--page:#f4f7ff;--panel:#fff;--line:#ddd8cf;--line-strong:#cfc7bb;--muted:#64748b;--blue:#2563eb;--text:#0f172a}}*{{box-sizing:border-box}}body{{margin:0;background:var(--bg);font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--text)}}
 .wrap{{max-width:1220px;margin:0 auto;padding:0 24px 32px}}.hero{{background:var(--bg);color:var(--text);padding:22px 0 0;margin-bottom:0}}
@@ -86,7 +129,7 @@ def _write_html(rows: list[dict]) -> None:
 .top-grid{{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin:14px 0 16px}}.card{{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px 20px;box-shadow:0 1px 2px rgba(60,50,40,.06)}}
 .btn{{display:inline-block;background:#111827;color:#fff;text-decoration:none;padding:9px 12px;border-radius:10px;font-weight:800}}.star{{color:#facc15;margin-right:4px}}.stats{{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0 20px}}
 .stat{{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:0 1px 2px rgba(60,50,40,.05)}}.stat .k{{color:var(--muted);font-size:.84rem}}.stat .v{{margin-top:6px;font-size:1.5rem;font-weight:850;letter-spacing:-.02em}}
-.lb{{display:flex;flex-direction:column;gap:10px}}.lb-row{{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;grid-template-columns:1.15fr 1.4fr .95fr;gap:12px;align-items:center;box-shadow:0 1px 2px rgba(60,50,40,.05)}}
+.section-head{{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;margin:22px 0 10px}}.section-head h2{{margin:0;font-size:1.35rem;letter-spacing:-.02em}}.section-head p{{margin:4px 0 0;color:var(--muted);font-size:.9rem}}.section-count{{color:var(--muted);font-size:.9rem;white-space:nowrap}}.lb{{display:flex;flex-direction:column;gap:10px}}.empty-row{{background:var(--panel);border:1px dashed var(--line-strong);border-radius:16px;padding:18px 20px;color:var(--muted)}}.lb-row{{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;grid-template-columns:1.15fr 1.4fr .95fr;gap:12px;align-items:center;box-shadow:0 1px 2px rgba(60,50,40,.05)}}
 .lb-row:hover{{border-color:var(--line-strong);box-shadow:0 8px 20px rgba(60,50,40,.08)}}.left{{display:flex;gap:10px;align-items:center}}.rank{{font-weight:850;color:#1d4ed8;min-width:38px}}.left strong{{font-size:1.03rem}}.muted{{color:var(--muted);font-size:.84rem}}
 .main-metric{{font-size:1.18rem;font-weight:850;letter-spacing:-.015em}}.main-metric span{{font-size:.72rem;color:var(--muted);text-transform:uppercase}}.sub-metric{{color:var(--muted);font-size:.86rem;margin-top:2px}}
 .config{{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}}.chip{{background:#fff;border:1px solid #ddd8cf;color:#334155;border-radius:999px;padding:2px 8px;font-size:.76rem;font-weight:700}}
@@ -95,7 +138,7 @@ def _write_html(rows: list[dict]) -> None:
 <header class='hero'><div class='wrap'><div class='hero-card'><div class='brandbar'><div class='brand-left'><img class='brand-hammerdb' src='assets/images/hammerDB-H-logo-FINAL.png' alt='HammerDB'><h1>HammerDB Result Artifacts</h1></div><img class='brand-tpc' src='assets/images/tpclogo.png' alt='TPC'></div><p>Community-submitted HammerDB benchmark result artifacts, reviewed through GitHub.</p><div class='badges'><span class='badge'>Prototype</span><span class='badge'>Community Submitted</span><span class='badge'>Unofficial</span></div><div class='warn'>These are community-submitted HammerDB results. They are not official TPC benchmark results.</div></div></div></header>
 <main class='wrap'><section class='top-grid'><article class='card'><h2 style='margin:0 0 8px'>Star HammerDB on GitHub</h2><p>Help others discover HammerDB by starring the project.</p><a class='btn' href='https://github.com/TPC-Council/HammerDB'><span class='star'>★</span> Star HammerDB</a></article><article class='card'><h3 style='margin:0 0 8px'>Submission guidance</h3><p style='margin:0;color:var(--muted)'>To submit a result, open the benchmark report in HammerDB and use Share with TPC-OSS.</p></article></section>
 <section class='stats'><article class='stat'><div class='k'>Published results</div><div class='v'>{len(rows)}</div></article><article class='stat'><div class='k'>Databases</div><div class='v'>{db_count}</div></article><article class='stat'><div class='k'>Top NOPM</div><div class='v'>{escape(_fmt_num(top_nopm))}</div></article></section>
-<section class='lb'>{''.join(_row_html(r) for r in rows)}</section></main></body></html>"""
+{top_c_html}{top_h_html}</main></body></html>"""
     INDEX_HTML.write_text(html, encoding='utf-8')
 
 def main() -> int:
