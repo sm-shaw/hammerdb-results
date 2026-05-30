@@ -91,6 +91,7 @@ def _row_html(row: dict) -> str:
 
 
 def _benchmark_summary_html(benchmark: str, rows: list[dict]) -> str:
+    db_count = len({(r.get("database_display") or r.get("database") or "Unknown") for r in rows})
     if benchmark == "TPROC-H":
         primary_label = "Best geomean"
         primary_value = min((r.get("geomean_seconds") for r in rows if isinstance(r.get("geomean_seconds"), (int, float))), default=None)
