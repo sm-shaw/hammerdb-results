@@ -314,7 +314,7 @@
 
   downloadJsonButton.addEventListener("click", () => {
     if (!rawJson || !artifactFilename) return;
-    const blob = new Blob([rawJson + "\\n"], { type: "application/json" });
+    const blob = new Blob([rawJson + "\n"], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
