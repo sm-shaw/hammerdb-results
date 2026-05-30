@@ -6,33 +6,34 @@
   <title>Submit HammerDB Result Artifact</title>
   <style>
     :root{
-      --bg:#fff;--card:#fff;--line:#e2e8f0;--line-strong:#cbd5e1;--text:#0f172a;--muted:#64748b;
+      --bg:#f7f6f3;--card:#fff;--line:#ddd8cf;--line-strong:#cfc7bb;--text:#0f172a;--muted:#64748b;
       --blue:#2563eb;--good:#15803d;--good-bg:#f0fdf4;--good-line:#bbf7d0;
       --warn:#b45309;--warn-bg:#fff7ed;--warn-line:#fdba74;
       --err:#be123c;--err-bg:#fff1f2;--err-line:#fecdd3
     }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--text);line-height:1.5}
-    .wrap{max-width:1120px;margin:0 auto;padding:0 24px 32px}
-    .hero{background:#fff;color:var(--text);padding:22px 0 0;margin-bottom:0;}
+    .wrap{max-width:1220px;margin:0 auto;padding:0 24px 32px}
+    .hero{background:var(--bg);color:var(--text);padding:18px 0 0;margin-bottom:0;}
+    .hero-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 20px;box-shadow:0 1px 2px rgba(60,50,40,.06)}
     .brandbar{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:12px}
     .brand-left{display:flex;align-items:flex-end;gap:18px}
     .brand-hammerdb{height:62px;width:auto;display:block}
     .brand-tpc{height:62px;width:auto;display:block;margin-top:0}
-    .hero h1{margin:0;font-size:clamp(2rem,4vw,2.8rem);line-height:1.08;letter-spacing:-.03em}
+    .hero h1{margin:0;font-size:2.2rem;line-height:1.08;letter-spacing:-.03em}
     .hero p{max-width:820px;color:#334155;margin:0}
     .badges{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
-    .badge{padding:6px 12px;border-radius:999px;background:#f8fafc;border:1px solid var(--line-strong);color:#1e3a8a;font-weight:700;font-size:.84rem}
+    .badge{padding:6px 12px;border-radius:999px;background:#fff;border:1px solid var(--line-strong);color:#334155;font-weight:700;font-size:.84rem}
     .hero-warn{margin-top:16px;padding:12px 14px;border-radius:12px;background:#fffaf3;border:1px solid #fdba74;color:#9a3412;font-weight:600;margin-bottom:0}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:8px 0 16px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 20px;box-shadow:0 1px 2px rgba(15,23,42,.04);margin-bottom:14px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0 16px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 20px;box-shadow:0 1px 2px rgba(60,50,40,.06);margin-bottom:14px}
     .card h2,.card h3{margin:0 0 8px;letter-spacing:-.015em}.card p{margin:0 0 12px}.muted{color:var(--muted)}
     .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;background:#111827;color:#fff;text-decoration:none;padding:10px 14px;font-weight:800;cursor:pointer;font:inherit;font-size:.94rem}
     .btn.primary{background:var(--blue)}
     .btn.good{background:var(--good)}
     .btn:disabled{opacity:.55;cursor:not-allowed}
     .star{color:#facc15;font-size:1.05rem;line-height:1}
-    .status{border-radius:14px;padding:14px 16px;margin-bottom:14px;border:1px solid var(--line);background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(15,23,42,.035)}
+    .status{border-radius:14px;padding:14px 16px;margin-bottom:14px;border:1px solid var(--line);background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(60,50,40,.05)}
     .status h3{margin:0 0 4px}.status p{margin:0}
     .status.success{border-color:var(--good-line);background:var(--good-bg);color:var(--good)}
     .status.warning{border-color:var(--warn-line);background:var(--warn-bg);color:var(--warn)}
@@ -41,7 +42,7 @@
     .summary-item{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}
     .summary-item .label{font-size:.76rem;text-transform:uppercase;color:var(--muted);font-weight:800;letter-spacing:.02em}
     .summary-item .value{font-weight:850;word-break:break-word;margin-top:3px}
-    .summary-item.metric{background:#f8fafc;border-color:#dbeafe}
+    .summary-item.metric{background:#fff;border-color:#ddd8cf}
     .submit-card{border:1px solid var(--line-strong)}
     .actions{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0 0}
     .meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
@@ -53,12 +54,13 @@
     .code-box{background:#0b1020;color:#dbeafe;border-radius:12px;padding:12px;overflow:auto;white-space:pre-wrap;word-break:break-word;border:1px solid #172554;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.88rem}
     .small{font-size:.9rem}
     @media(max-width:860px){.grid,.summary,.meta{grid-template-columns:1fr}.wrap{padding-left:16px;padding-right:16px}}
-    @media(max-width:700px){.brandbar{align-items:center}.brand-hammerdb{height:48px}.brand-tpc{height:48px}.brand-left{gap:12px}.hero{padding:20px 0 0}}
+    @media(max-width:700px){.brandbar{align-items:center}.brand-hammerdb{height:48px}.brand-tpc{height:48px}.brand-left{gap:12px}.hero h1{font-size:1.8rem}.hero{padding:14px 0 0}}
   </style>
 </head>
 <body>
   <header class="hero">
     <div class="wrap">
+      <div class="hero-card">
       <div class="brandbar">
         <div class="brand-left">
           <img class="brand-hammerdb" src="assets/images/hammerDB-H-logo-FINAL.png" alt="HammerDB">
@@ -69,6 +71,7 @@
       <p>Check your HammerDB result and upload it for community review.</p>
       <div class="badges"><span class="badge">Prototype</span><span class="badge">GitHub Reviewed</span><span class="badge">Unofficial</span></div>
       <div class="hero-warn">Community-submitted HammerDB results are unaudited and are not official TPC benchmark results.</div>
+      </div>
     </div>
   </header>
 
