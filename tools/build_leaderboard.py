@@ -90,16 +90,27 @@ def _row_html(row: dict) -> str:
 </article>"""
 
 
+def _benchmark_summary_html(benchmark: str, rows: list[dict]) -> str:
+    if benchmark == "TPROC-H":
+        primary_label = "Best geomean"
+        primary_value = min((r.get("geomean_seconds") for r in rows if isinstance(r.get("geomean_seconds"), (int, float))), default=None)
+    else:
+        primary_label = "Top NOPM"
+        primary_value = max((r.get("nopm") for r in rows if isinstance(r.get("nopm"), (int, float))), default=None)
+
+    return f"""<section class='stats benchmark-stats'><article class='stat'><div class='k'>Results</div><div class='v'>{len(rows)}</div></article><article class='stat'><div class='k'>Databases</div><div class='v'>{db_count}</div></article><article class='stat'><div class='k'>{escape(primary_label)}</div><div class='v'>{escape(_fmt_num(primary_value))}</div></article></section>"""
+
+
 def _section_html(title: str, rows: list[dict], empty_message: str) -> str:
     visible = rows[:100]
+    summary = _benchmark_summary_html(title, rows)
     if visible:
         body = "".join(_row_html(r) for r in visible)
     else:
         body = f"<article class='empty-row'>{escape(empty_message)}</article>"
-    return f"""<section class='section-head'><h2>{escape(title)}</h2></section><section class='lb'>{body}</section>"""
+    return f"""<section class='section-head'><h2>{escape(title)}</h2></section>{summary}<section class='lb'>{body}</section>"""
 
 def _write_html(rows: list[dict]) -> None:
-    db_count = len({(r.get("database_display") or r.get("database") or "Unknown") for r in rows})
     tproc_c_rows = sorted(
         [r for r in rows if r.get("benchmark") == "TPROC-C"],
         key=lambda r: (r.get("nopm") is None, -(r.get("nopm") or 0), r.get("jobid") or ""),
@@ -114,7 +125,6 @@ def _write_html(rows: list[dict]) -> None:
     for i, r in enumerate(tproc_h_rows, 1):
         r["rank"] = i
 
-    top_nopm = max((r.get("nopm") for r in tproc_c_rows if isinstance(r.get("nopm"), (int, float))), default=None)
     top_c_html = _section_html("TPROC-C", tproc_c_rows, "No TPROC-C results yet.")
     top_h_html = _section_html("TPROC-H", tproc_h_rows, "No TPROC-H results yet.")
     html = f"""<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>HammerDB Result Artifacts</title>
@@ -125,7 +135,7 @@ def _write_html(rows: list[dict]) -> None:
 .hero h1{{margin:0;font-size:2.2rem;line-height:1.08;letter-spacing:-.03em}}.hero p{{max-width:780px;color:#334155;margin:0}}.badges{{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}}.badge{{padding:6px 12px;border-radius:999px;background:#fff;border:1px solid var(--line-strong);color:#334155;font-weight:700;font-size:.84rem}}
 .warn{{margin-top:16px;padding:12px 14px;border-radius:12px;background:#fffaf3;border:1px solid #fdba74;color:#9a3412;font-weight:600;margin-bottom:0}}
 .top-grid{{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin:14px 0 16px}}.card{{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px 20px;box-shadow:0 1px 2px rgba(60,50,40,.06)}}
-.btn{{display:inline-block;background:#111827;color:#fff;text-decoration:none;padding:9px 12px;border-radius:10px;font-weight:800}}.star{{color:#facc15;margin-right:4px}}.stats{{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0 20px}}
+.btn{{display:inline-block;background:#111827;color:#fff;text-decoration:none;padding:9px 12px;border-radius:10px;font-weight:800}}.star{{color:#facc15;margin-right:4px}}.stats{{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 10px}}
 .stat{{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:0 1px 2px rgba(60,50,40,.05)}}.stat .k{{color:var(--muted);font-size:.84rem}}.stat .v{{margin-top:6px;font-size:1.5rem;font-weight:850;letter-spacing:-.02em}}
 .section-head{{margin:22px 0 10px}}.section-head h2{{margin:0;font-size:1.35rem;letter-spacing:-.02em}}.lb{{display:flex;flex-direction:column;gap:10px}}.empty-row{{background:var(--panel);border:1px dashed var(--line-strong);border-radius:16px;padding:18px 20px;color:var(--muted)}}.lb-row{{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;grid-template-columns:1.15fr 1.4fr .95fr;gap:12px;align-items:center;box-shadow:0 1px 2px rgba(60,50,40,.05)}}
 .lb-row:hover{{border-color:var(--line-strong);box-shadow:0 8px 20px rgba(60,50,40,.08)}}.left{{display:flex;gap:10px;align-items:center}}.rank{{font-weight:850;color:#1d4ed8;min-width:38px}}.left strong{{font-size:1.03rem}}.muted{{color:var(--muted);font-size:.84rem}}
@@ -135,7 +145,6 @@ def _write_html(rows: list[dict]) -> None:
 @media(max-width:980px){{.top-grid,.stats{{grid-template-columns:1fr}}.lb-row{{grid-template-columns:1fr}}.right{{text-align:left}}.system{{white-space:normal}}}}@media(max-width:700px){{.brandbar{{align-items:center}}.brand-hammerdb{{height:48px}}.brand-tpc{{height:48px}}.brand-left{{gap:12px}}.hero h1{{font-size:1.8rem}}.hero{{padding:14px 0 0}}}}</style></head><body>
 <header class='hero'><div class='wrap'><div class='hero-card'><div class='brandbar'><div class='brand-left'><img class='brand-hammerdb' src='assets/images/hammerDB-H-logo-FINAL.png' alt='HammerDB'><h1>HammerDB Result Artifacts</h1></div><img class='brand-tpc' src='assets/images/tpclogo.png' alt='TPC'></div><p>Community-submitted HammerDB benchmark result artifacts, reviewed through GitHub.</p><div class='badges'><span class='badge'>Prototype</span><span class='badge'>Community Submitted</span><span class='badge'>Unofficial</span></div><div class='warn'>These are community-submitted HammerDB results. They are not official TPC benchmark results.</div></div></div></header>
 <main class='wrap'><section class='top-grid'><article class='card'><h2 style='margin:0 0 8px'>Star HammerDB on GitHub</h2><p>Help others discover HammerDB by starring the project.</p><a class='btn' href='https://github.com/TPC-Council/HammerDB'><span class='star'>★</span> Star HammerDB</a></article><article class='card'><h3 style='margin:0 0 8px'>Submission guidance</h3><p style='margin:0;color:var(--muted)'>To submit a result, open the benchmark report in HammerDB and use Share with TPC-OSS.</p></article></section>
-<section class='stats'><article class='stat'><div class='k'>Published results</div><div class='v'>{len(rows)}</div></article><article class='stat'><div class='k'>Databases</div><div class='v'>{db_count}</div></article><article class='stat'><div class='k'>Top NOPM</div><div class='v'>{escape(_fmt_num(top_nopm))}</div></article></section>
 {top_c_html}{top_h_html}</main></body></html>"""
     INDEX_HTML.write_text(html, encoding='utf-8')
 
