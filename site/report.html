@@ -154,16 +154,22 @@ table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #e8edf7;
         document.getElementById("cfg").appendChild(c);
       });
 
-      [["hostname", "Hostname"], ["cpumodel", "CPU Model"], ["cpucount", "CPU Count"], ["memory", "Memory"], ["system_vendor", "System Vendor"], ["system_type", "System Type"], ["os_name", "OS"], ["nic", "NIC"], ["storage", "Storage"], ["cloud_instance", "Cloud Instance"]].forEach(([k, l]) => {
-        if (sys[k] !== undefined) {
+      const sysEl = document.getElementById("sys");
+      const sysFields = [["hostname", "Hostname"], ["cpumodel", "CPU Model"], ["cpucount", "CPU Count"], ["memory", "Memory"], ["system_vendor", "System Vendor"], ["system_type", "System Type"], ["os_name", "OS"], ["nic", "NIC"], ["storage", "Storage"], ["cloud_instance", "Cloud Instance"]];
+      const sysRows = sysFields.filter(([k]) => sys[k] !== undefined && sys[k] !== null && sys[k] !== "");
+      if (sys.available === false || !sysRows.length) {
+        sysEl.className = "muted";
+        sysEl.textContent = sys.message || "System data unavailable";
+      } else {
+        sysRows.forEach(([k, l]) => {
           const kd = document.createElement("div");
           kd.className = "key";
           kd.textContent = l;
           const vd = document.createElement("div");
-          vd.textContent = sys[k] ?? "—";
-          document.getElementById("sys").append(kd, vd);
-        }
-      });
+          vd.textContent = sys[k];
+          sysEl.append(kd, vd);
+        });
+      }
 
       const rtTitle = document.getElementById("rt-title");
       const rtHead = document.getElementById("rt-head");
@@ -173,13 +179,13 @@ table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #e8edf7;
 
       if (isTprocH) {
         rtTitle.textContent = "Query Times";
-        rtHead.innerHTML = "<tr><th>Query</th><th>Milliseconds</th><th>Seconds</th></tr>";
+        rtHead.innerHTML = "<tr><th>Query</th><th>Seconds</th></tr>";
         if (!queryRows.length) {
-          rt.innerHTML = '<tr><td colspan="3" class="muted">No query time data available</td></tr>';
+          rt.innerHTML = '<tr><td colspan="2" class="muted">No query time data available</td></tr>';
         } else {
           queryRows.forEach(x => {
             const tr = document.createElement("tr");
-            tr.innerHTML = `<td>Query ${esc(x.name)}</td><td>${formatNumber(x.total_ms)}</td><td>${formatSeconds(x.seconds)}</td>`;
+            tr.innerHTML = `<td>Query ${esc(x.name)}</td><td>${formatSeconds(x.seconds)}</td>`;
             rt.appendChild(tr);
           });
         }
@@ -221,8 +227,8 @@ table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #e8edf7;
         document.getElementById("rt-chart-title").textContent = "Query Times";
         replaceChart("rtchart", {
           type: "bar",
-          data: { labels: queryRows.map(r => `Q${r.name}`), datasets: [{ label: "Query time", data: queryRows.map(r => Number(r.total_ms || 0)), backgroundColor: "#3b82f6", borderRadius: 8 }] },
-          options: { ...baseOptions("Milliseconds", "Query", v => formatNumber(v)), plugins: { legend: { display: false }, tooltip: { enabled: true, intersect: false, callbacks: { title: items => `Query ${queryRows[items[0].dataIndex]?.name || ""}`, label: c => `Time: ${formatNumber(c.raw)} ms` } } } }
+          data: { labels: queryRows.map(r => `Q${r.name}`), datasets: [{ label: "Query time", data: queryRows.map(r => Number(r.seconds || 0)), backgroundColor: "#3b82f6", borderRadius: 8 }] },
+          options: { ...baseOptions("Seconds", "Query", v => formatSeconds(v)), plugins: { legend: { display: false }, tooltip: { enabled: true, intersect: false, callbacks: { title: items => `Query ${queryRows[items[0].dataIndex]?.name || ""}`, label: c => `Time: ${formatSeconds(c.raw)} sec` } } } }
         });
       } else {
         replaceChart("rtchart", {
