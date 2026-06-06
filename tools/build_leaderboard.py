@@ -6,11 +6,14 @@ from html import escape
 from pathlib import Path
 from urllib.parse import quote
 
+from result_validation import format_validation_failure, validate_artifacts
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 RESULTS_ROOT = REPO_ROOT / "results"
 SITE_ROOT = REPO_ROOT / "site"
 LEADERBOARD_JSON = SITE_ROOT / "leaderboard.json"
 INDEX_HTML = SITE_ROOT / "index.html"
+TPROC_H_SCALE_FACTORS = (1, 10, 30, 100, 300, 1000, 3000, 10000, 30000, 100000)
 
 def _fmt_num(v: object) -> str:
     if v is None:
@@ -41,6 +44,8 @@ def _load_rows() -> list[dict]:
             "duration_minutes": cfg.get("duration_minutes"), "cpu_model": sys.get("cpumodel"), "cpu_count": sys.get("cpucount"),
             "memory": sys.get("memory"), "os_name": sys.get("os_name"), "source_path": rel,
         })
+        if job.get("benchmark") == "TPROC-H":
+            rows[-1]["scale_factor"] = cfg.get("scale_factor")
     def _sort_key(row: dict) -> tuple:
         benchmark = row.get("benchmark")
         if benchmark == "TPROC-H":
@@ -111,6 +116,43 @@ def _section_html(title: str, rows: list[dict], empty_message: str) -> str:
         body = f"<article class='empty-row'>{escape(empty_message)}</article>"
     return f"""<section class='section-head'><h2>{escape(title)}</h2></section>{summary}<section class='lb'>{body}</section>"""
 
+
+def _tproc_h_scale_factor(row: dict) -> int | None:
+    value = row.get("scale_factor")
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        sf = value
+    elif isinstance(value, float) and value.is_integer():
+        sf = int(value)
+    elif isinstance(value, str) and value.isdigit():
+        sf = int(value)
+    else:
+        return None
+    return sf if sf in TPROC_H_SCALE_FACTORS else None
+
+
+def _tproc_h_section_html(rows: list[dict]) -> str:
+    summary = _benchmark_summary_html("TPROC-H", rows)
+    if not rows:
+        body = "<article class='empty-row'>No TPROC-H results yet.</article>"
+    else:
+        groups: list[tuple[str, list[dict]]] = []
+        for sf in TPROC_H_SCALE_FACTORS:
+            sf_rows = [r for r in rows if _tproc_h_scale_factor(r) == sf]
+            if sf_rows:
+                groups.append((f"SF{sf}", sf_rows))
+
+        unknown_rows = [r for r in rows if _tproc_h_scale_factor(r) is None]
+        if unknown_rows:
+            groups.append(("SF unknown", unknown_rows))
+
+        body = "".join(
+            f"<h3 class='sf-head'>{escape(label)}</h3>" + "".join(_row_html(r) for r in group_rows)
+            for label, group_rows in groups
+        )
+    return f"""<section class='section-head'><h2>TPROC-H</h2></section>{summary}<section class='lb'>{body}</section>"""
+
 def _write_html(rows: list[dict]) -> None:
     tproc_c_rows = sorted(
         [r for r in rows if r.get("benchmark") == "TPROC-C"],
@@ -127,7 +169,7 @@ def _write_html(rows: list[dict]) -> None:
         r["rank"] = i
 
     top_c_html = _section_html("TPROC-C", tproc_c_rows, "No TPROC-C results yet.")
-    top_h_html = _section_html("TPROC-H", tproc_h_rows, "No TPROC-H results yet.")
+    top_h_html = _tproc_h_section_html(tproc_h_rows)
     html = f"""<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>HammerDB Result Artifacts</title>
 <style>:root{{--bg:#f4f7ff;--page:#f4f7ff;--panel:#fff;--line:#ddd8cf;--line-strong:#cfc7bb;--muted:#64748b;--blue:#2563eb;--text:#0f172a}}*{{box-sizing:border-box}}body{{margin:0;background:var(--bg);font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--text)}}
 .wrap{{max-width:1220px;margin:0 auto;padding:0 24px 32px}}.hero{{background:var(--bg);color:var(--text);padding:22px 0 0;margin-bottom:0}}
@@ -138,18 +180,23 @@ def _write_html(rows: list[dict]) -> None:
 .top-grid{{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin:14px 0 16px}}.card{{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px 20px;box-shadow:0 1px 2px rgba(60,50,40,.06)}}
 .btn{{display:inline-block;background:#111827;color:#fff;text-decoration:none;padding:9px 12px;border-radius:10px;font-weight:800}}.star{{color:#facc15;margin-right:4px}}.stats{{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 10px}}
 .stat{{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:0 1px 2px rgba(60,50,40,.05)}}.stat .k{{color:var(--muted);font-size:.84rem}}.stat .v{{margin-top:6px;font-size:1.5rem;font-weight:850;letter-spacing:-.02em}}
-.section-head{{margin:22px 0 10px}}.section-head h2{{margin:0;font-size:1.35rem;letter-spacing:-.02em}}.lb{{display:flex;flex-direction:column;gap:10px}}.empty-row{{background:var(--panel);border:1px dashed var(--line-strong);border-radius:16px;padding:18px 20px;color:var(--muted)}}.lb-row{{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;grid-template-columns:1.15fr 1.4fr .95fr;gap:12px;align-items:center;box-shadow:0 1px 2px rgba(60,50,40,.05)}}
+.section-head{{margin:22px 0 10px}}.section-head h2{{margin:0;font-size:1.35rem;letter-spacing:-.02em}}.sf-head{{margin:6px 0 0;color:var(--muted);font-size:.95rem;letter-spacing:.03em;text-transform:uppercase}}.lb{{display:flex;flex-direction:column;gap:10px}}.empty-row{{background:var(--panel);border:1px dashed var(--line-strong);border-radius:16px;padding:18px 20px;color:var(--muted)}}.lb-row{{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;grid-template-columns:1.15fr 1.4fr .95fr;gap:12px;align-items:center;box-shadow:0 1px 2px rgba(60,50,40,.05)}}
 .lb-row:hover{{border-color:var(--line-strong);box-shadow:0 8px 20px rgba(60,50,40,.08)}}.left{{display:flex;gap:10px;align-items:center}}.rank{{font-weight:850;color:#1d4ed8;min-width:38px}}.left strong{{font-size:1.03rem}}.muted{{color:var(--muted);font-size:.84rem}}
 .main-metric{{font-size:1.18rem;font-weight:850;letter-spacing:-.015em}}.main-metric span{{font-size:.72rem;color:var(--muted);text-transform:uppercase}}.sub-metric{{color:var(--muted);font-size:.86rem;margin-top:2px}}
 .config{{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}}.chip{{background:#fff;border:1px solid #ddd8cf;color:#334155;border-radius:999px;padding:2px 8px;font-size:.76rem;font-weight:700}}
 .right{{text-align:right}}.system{{font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}.date{{color:var(--muted);font-size:.82rem;margin:4px 0 7px}}.right .btn{{background:var(--blue)}}
 @media(max-width:980px){{.top-grid,.stats{{grid-template-columns:1fr}}.lb-row{{grid-template-columns:1fr}}.right{{text-align:left}}.system{{white-space:normal}}}}@media(max-width:700px){{.brandbar{{align-items:center}}.brand-hammerdb{{height:48px}}.brand-tpc{{height:48px}}.brand-left{{gap:12px}}.hero h1{{font-size:1.8rem}}.hero{{padding:14px 0 0}}}}</style></head><body>
-<header class='hero'><div class='wrap'><div class='hero-card'><div class='brandbar'><div class='brand-left'><img class='brand-hammerdb' src='assets/images/hammerDB-H-logo-FINAL.png' alt='HammerDB'><h1>HammerDB Result Artifacts</h1></div><img class='brand-tpc' src='assets/images/tpclogo.png' alt='TPC'></div><div class='warn'>User-submitted, unaudited HammerDB result artifacts reviewed through GitHub.</div></div></div></header>
+<header class='hero'><div class='wrap'><div class='hero-card'><div class='brandbar'><div class='brand-left'><a href='https://www.hammerdb.com/' aria-label='HammerDB website'><img class='brand-hammerdb' src='assets/images/hammerDB-H-logo-FINAL.png' alt='HammerDB'></a><h1>HammerDB Result Artifacts</h1></div><a href='https://www.tpc.org/' aria-label='TPC website'><img class='brand-tpc' src='assets/images/tpclogo.png' alt='TPC'></a></div><div class='warn'>User-submitted, unaudited HammerDB result artifacts reviewed through GitHub.</div></div></div></header>
 <main class='wrap'><section class='top-grid'><article class='card'><h2 style='margin:0 0 8px'>Star HammerDB on GitHub</h2><p>Help others discover HammerDB by starring the project.</p><a class='btn' href='https://github.com/TPC-Council/HammerDB'><span class='star'>★</span> Star HammerDB</a></article><article class='card'><h3 style='margin:0 0 8px'>Submission guidance</h3><p style='margin:0;color:var(--muted)'>To submit a result, open the benchmark report in HammerDB and use Share with TPC-OSS.</p></article></section>
 {top_c_html}{top_h_html}</main></body></html>"""
     INDEX_HTML.write_text(html, encoding='utf-8')
 
 def main() -> int:
+    validation = validate_artifacts(REPO_ROOT, RESULTS_ROOT)
+    if not validation.ok:
+        print(format_validation_failure(validation.errors))
+        return 1
+
     SITE_ROOT.mkdir(parents=True, exist_ok=True)
     rows = _load_rows(); _write_json(rows); _write_html(rows)
     print(f"Generated {LEADERBOARD_JSON.relative_to(REPO_ROOT)} and {INDEX_HTML.relative_to(REPO_ROOT)} with {len(rows)} row(s).")
