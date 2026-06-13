@@ -221,12 +221,17 @@
 
   async function artifactAlreadyExists(path) {
     const rawUrl = "https://raw.githubusercontent.com/" + TARGET_OWNER + "/" + TARGET_REPO + "/" + TARGET_BRANCH + "/" + path;
-    try {
-      const response = await fetch(rawUrl, { method: "HEAD", cache: "no-store" });
-      return response.ok;
-    } catch (err) {
+    const response = await fetch(rawUrl, { method: "GET", cache: "no-store" });
+
+    if (response.status === 200) {
+      return true;
+    }
+
+    if (response.status === 404) {
       return false;
     }
+
+    throw new Error("Could not check whether this result artifact already exists.");
   }
 
   function prepareSubmission(job, result) {
@@ -269,12 +274,15 @@
     artifactAlreadyExists(targetPath).then((exists) => {
       if (exists) {
         createResultFileButton.disabled = true;
-        setStatus("Already submitted", "This artifact already exists in the results repository. No submission is needed.", "success");
+        setStatus("Already submitted", "This HammerDB result artifact already exists in the results repository. No submission is needed.", "success");
         return;
       }
 
       createResultFileButton.disabled = false;
       setStatus("Ready to submit", "Validation passed. Continue to GitHub. GitHub will open with the result file path already filled in.", "success");
+    }).catch(() => {
+      createResultFileButton.disabled = true;
+      setStatus("Repository check failed", "The submission page could not check whether this result artifact already exists. Please try again before continuing to GitHub.", "error");
     });
   }
 
