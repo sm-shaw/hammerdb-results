@@ -96,7 +96,7 @@
 
     <section id="upload-card" class="card">
       <h2>Validate saved artifact</h2>
-      <p class="muted">Upload or drag and drop the saved HammerDB result artifact. This page validates the file before sending you to GitHub.</p>
+      <p class="muted">Upload or drag and drop the saved HammerDB result artifact. This page validates the file before continuing to GitHub.</p>
       <div id="dropzone" class="dropzone">
         <p><strong>Drop the saved HammerDB result artifact here</strong></p>
         <p class="muted small">or choose it from your computer.</p>
@@ -114,7 +114,7 @@
 
     <section id="submit-card" class="card submit-card" hidden>
       <h2>Submit to GitHub</h2>
-      <p class="muted">Submit your HammerDB result through GitHub for open review and publication in the TPC-OSS results repository. Click “Continue to GitHub”. GitHub will open with the result file path already filled in. Paste or drag the saved HammerDB result artifact into the editor, then click “Commit changes” and follow the GitHub prompts to open a pull request.</p>
+      <p class="muted">Submit your HammerDB result through GitHub for open review and publication in the TPC-OSS results repository. Click “Continue to GitHub”. GitHub will open with the result file path already filled in. Paste or drag the saved HammerDB result artifact into the GitHub editor, then click “Commit changes” and follow the GitHub prompts to open a pull request.</p>
       <div class="meta">
         <div><strong>File name</strong><span id="artifact-filename">—</span></div>
         <div><strong>Target folder</strong><span id="target-directory">—</span></div>
@@ -274,7 +274,7 @@
       }
 
       createResultFileButton.disabled = false;
-      setStatus("Ready to submit", "Validation passed. Continue to GitHub, then add the saved HammerDB result artifact to the new result file.", "success");
+      setStatus("Ready to submit", "Validation passed. Continue to GitHub. GitHub will open with the result file path already filled in.", "success");
     });
   }
 
