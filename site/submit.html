@@ -298,7 +298,11 @@
     }).catch(() => {
       if (requestId !== validationRequestId) return;
       blockGitHubSubmission();
-      setStatus("Repository check failed", "The submission page could not check whether this result artifact already exists. Please try again before continuing to GitHub.", "error");
+      setStatus(
+        "Repository check failed",
+        "The submission page could not check whether this result artifact already exists. Please try again before continuing to GitHub.",
+        "error"
+      );
     });
   }
 
