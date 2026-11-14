@@ -1,0 +1,16 @@
+# TPC-Council submission service — separate from the working HammerDB Ltd Worker.
+# Do not deploy until the TPC-Council administrator approves the GitHub App.
+name = "hammerdb-results-tpc-submit"
+main = "worker.mjs"
+compatibility_date = "2026-11-13"
+
+[vars]
+GITHUB_TARGET_OWNER = "TPC-Council"
+GITHUB_TARGET_REPO = "hammerdb-results"
+ALLOWED_ORIGIN = "https://tpc-council.github.io"
+
+# Create a separate TPC-only KV namespace and insert its real ID before deploying.
+# NEVER put GitHub App secrets or private keys in this file.
+[[kv_namespaces]]
+binding = "PENDING"
+id = "REPLACE_WITH_TPC_PENDING_KV_NAMESPACE_ID"
