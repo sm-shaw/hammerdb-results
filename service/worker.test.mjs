@@ -128,7 +128,7 @@ test("duplicate results never create branches or PRs",async()=>{
 
 test("wrong target is rejected before storing data",async()=>{
   const p=setup();
-  const r=await p.start(artifact,"TPC-Council/hammerdb-results");
+  const r=await p.start(artifact,"HammerDBLtd/hammerdb-results");
   assert.equal(r.status,400);
   assert.match((await r.json()).error,/different repository/);
   assert.equal(p.saved.size,0);
